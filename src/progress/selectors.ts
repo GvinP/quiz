@@ -1,6 +1,6 @@
 import type { Question } from '../data/types.ts';
 import type { Progress } from './types.ts';
-import { isDue, isWeak } from './leitner.ts';
+import { dueDay, isDue, isWeak } from './leitner.ts';
 import { dayNumber } from './day.ts';
 
 const entryOf = (progress: Progress, question: Question) => progress[question.topic]?.[question.id];
@@ -43,4 +43,28 @@ export function weakQueue(questions: Question[], progress: Progress, random?: ()
     questions.filter((question) => isWeak(entryOf(progress, question))),
     random,
   );
+}
+
+/**
+ * Ближайший день, когда появится что повторять, или null — если вопросов нет
+ * вовсе. Нужен пустому состоянию: «нечего повторять» без срока выглядит как
+ * поломка, а не как честный ответ.
+ */
+export function nextDueDay(
+  questions: Question[],
+  progress: Progress,
+  today: number = dayNumber(),
+): number | null {
+  let nearest: number | null = null;
+
+  for (const question of questions) {
+    const entry = entryOf(progress, question);
+    if (!entry || entry.seen === 0) return today;
+
+    const due = dueDay(entry);
+    if (due <= today) return today;
+    nearest = nearest === null ? due : Math.min(nearest, due);
+  }
+
+  return nearest;
 }
