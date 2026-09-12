@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { quizQueue, reviewQueue, weakQueue, shuffle } from '../src/progress/selectors.ts';
+import { quizQueue, reviewQueue, weakQueue, shuffle, nextDueDay } from '../src/progress/selectors.ts';
 import type { Question } from '../src/data/types.ts';
 import type { Progress } from '../src/progress/types.ts';
 
@@ -80,4 +80,36 @@ test('перемешивание сохраняет состав и не мен�
   const shuffled = shuffle(source);
   assert.deepEqual(source, copy);
   assert.deepEqual([...shuffled].sort(), [...source].sort());
+});
+
+test('ближайшее повторение: неотвеченный вопрос делает его сегодняшним', () => {
+  assert.equal(nextDueDay(questions, {}, 100), 100);
+});
+
+test('ближайшее повторение считается по самой ранней коробке', () => {
+  const progress: Progress = {
+    'rn-architecture': {
+      'rn-arch-001': { box: 5, seen: 9, correct: 9, day: 100 },
+      'rn-arch-002': { box: 2, seen: 3, correct: 2, day: 100 },
+    },
+    'rn-performance': {
+      'rn-perf-001': { box: 3, seen: 4, correct: 3, day: 100 },
+    },
+  };
+  assert.equal(nextDueDay(questions, progress, 100), 101, 'коробка 2 — интервал 1 день');
+});
+
+test('ближайшее повторение равно сегодня, если что-то уже пора', () => {
+  const progress: Progress = {
+    'rn-architecture': {
+      'rn-arch-001': { box: 1, seen: 2, correct: 0, day: 100 },
+      'rn-arch-002': { box: 5, seen: 9, correct: 9, day: 100 },
+    },
+    'rn-performance': { 'rn-perf-001': { box: 5, seen: 9, correct: 9, day: 100 } },
+  };
+  assert.equal(nextDueDay(questions, progress, 100), 100);
+});
+
+test('без вопросов ближайшего повторения не существует', () => {
+  assert.equal(nextDueDay([], {}, 100), null);
 });
