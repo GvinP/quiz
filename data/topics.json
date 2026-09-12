@@ -1,0 +1,14 @@
+{
+  "topics": [
+    {
+      "topic": "rn-architecture",
+      "title": "React Native: архитектура",
+      "file": "rn-architecture.json"
+    },
+    {
+      "topic": "rn-performance",
+      "title": "React Native: производительность",
+      "file": "rn-performance.json"
+    }
+  ]
+}
