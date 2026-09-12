@@ -1,0 +1,23 @@
+name: CI
+
+# Только PR: пуш в main проверяется теми же шагами внутри deploy.yml,
+# а push-триггер на рабочих ветках дублировал бы каждый прогон.
+on:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Проверка данных
+        run: npm run validate
+      - name: Проверка типов
+        run: npm run typecheck
+      - run: npm run build
