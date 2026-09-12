@@ -24,7 +24,17 @@ interface TelegramHapticFeedback {
   notificationOccurred(type: 'error' | 'success' | 'warning'): void;
 }
 
+/** Колбэки CloudStorage идут в стиле Node: (error, result). */
+interface TelegramCloudStorage {
+  setItem(key: string, value: string, callback?: (error: string | null, saved: boolean) => void): void;
+  getItem(key: string, callback: (error: string | null, value: string) => void): void;
+  getItems(keys: string[], callback: (error: string | null, values: Record<string, string>) => void): void;
+  removeItems(keys: string[], callback?: (error: string | null, removed: boolean) => void): void;
+  getKeys(callback: (error: string | null, keys: string[]) => void): void;
+}
+
 interface TelegramWebApp {
+  CloudStorage: TelegramCloudStorage;
   ready(): void;
   expand(): void;
   colorScheme: 'light' | 'dark';

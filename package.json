@@ -9,13 +9,15 @@
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
     "validate": "node scripts/validate-data.mjs",
-    "check": "npm run validate && npm run typecheck && npm run build"
+    "check": "npm run validate && npm run typecheck && npm test && npm run build",
+    "test": "node --test test/*.test.ts"
   },
   "dependencies": {
     "react": "^18.3.1",
     "react-dom": "^18.3.1"
   },
   "devDependencies": {
+    "@types/node": "^22.10.2",
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
     "@vitejs/plugin-react": "^4.3.4",

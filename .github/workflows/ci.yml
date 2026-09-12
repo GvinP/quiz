@@ -20,4 +20,6 @@ jobs:
         run: npm run validate
       - name: Проверка типов
         run: npm run typecheck
+      - name: Тесты
+        run: npm test
       - run: npm run build
