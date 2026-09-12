@@ -1,9 +1,10 @@
 name: CI
 
+# Только PR: пуш в main проверяется теми же шагами внутри deploy.yml,
+# а push-триггер на рабочих ветках дублировал бы каждый прогон.
 on:
   pull_request:
-  push:
-    branches-ignore: [main]
+  workflow_dispatch:
 
 jobs:
   check:
