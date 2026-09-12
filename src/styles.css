@@ -52,6 +52,22 @@ body {
   color: var(--text);
   font: 16px/1.5 -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   -webkit-font-smoothing: antialiased;
+  /* Оттягивание вниз перезагружает страницу — а вместе с ней теряется текущая
+     сессия. В Mini App свайп уже отключён, здесь закрываем браузерный случай. */
+  overscroll-behavior-y: contain;
+}
+
+/* Интерфейс кнопочный: подсветка тапа, выделение текста долгим нажатием и
+   задержка от двойного тапа тут только мешают. */
+button {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  user-select: none;
+}
+
+:focus-visible {
+  outline: 2px solid var(--link);
+  outline-offset: 2px;
 }
 
 #root {
@@ -95,13 +111,14 @@ p {
 }
 
 /* Экран целиком: контент скроллится, действия закреплены снизу — до кнопок
-   должен дотягиваться большой палец. */
+   должен дотягиваться большой палец. Боковые отступы учитывают вырез экрана:
+   в альбомной ориентации без них текст упирается в край. */
 .screen,
 .session {
   display: flex;
   flex-direction: column;
   min-height: var(--viewport);
-  padding: 16px 16px 0;
+  padding: 16px max(16px, env(safe-area-inset-right)) 0 max(16px, env(safe-area-inset-left));
 }
 
 /* Тянется, чтобы блок действий оставался прижатым к низу на коротких экранах. */
@@ -112,8 +129,13 @@ p {
 .session-header {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   margin-bottom: 12px;
+}
+
+/* Счётчик прижат вправо сам — тогда при нативной кнопке «Назад» в разметке
+   не нужна пустая распорка. */
+.session-header .hint {
+  margin-left: auto;
 }
 
 .bar {
