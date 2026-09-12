@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { Question } from '../data/types.ts';
 import { isOpen } from '../data/types.ts';
 import { Markdown } from '../components/Markdown.tsx';
@@ -36,6 +36,13 @@ export function Session({ title, questions, onAnswer, onFinish, onExit }: Sessio
   const [revealed, setRevealed] = useState(false);
   const [results, setResults] = useState<AnswerResult[]>([]);
   const nativeBack = useBackButton(onExit);
+
+  // Следующий вопрос должен открываться сверху. Сейчас браузер и так зажимает
+  // прокрутку, потому что страница после перехода короче, — но это совпадение,
+  // а не гарантия: длинный вопрос с блоком кода её сохранит.
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [index]);
 
   const question = questions[index];
   const open = isOpen(question);
@@ -85,9 +92,7 @@ export function Session({ title, questions, onAnswer, onFinish, onExit }: Sessio
   return (
     <div className="session">
       <header className="session-header">
-        {nativeBack ? (
-          <span />
-        ) : (
+        {!nativeBack && (
           <button type="button" className="link" onClick={onExit}>
             ← Выйти
           </button>
