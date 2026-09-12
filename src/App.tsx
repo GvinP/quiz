@@ -1,27 +1,31 @@
 import { useEffect, useMemo, useState } from 'react';
 import { topicRefs } from './data/topics.ts';
-import { isTelegram } from './telegram/webapp.ts';
 import { createProgressStore } from './progress/store.ts';
 import { pickStore } from './progress/storage.ts';
-import { reviewQueue, weakQueue } from './progress/selectors.ts';
-import type { Progress } from './progress/types.ts';
+import { quizQueue } from './progress/selectors.ts';
+import { Home } from './screens/Home.tsx';
+import { Session } from './screens/Session.tsx';
+import type { AnswerResult } from './screens/Session.tsx';
+import { Result } from './screens/Result.tsx';
 import type { Question, TopicFile } from './data/types.ts';
 
-// Отладочный экран третьего шага: экраны режимов появятся следующими.
-// Задача — проверить с телефона, что прогресс переживает перезапуск.
+type Screen =
+  | { name: 'home' }
+  | { name: 'session'; title: string; questions: Question[] }
+  | { name: 'result'; title: string; questions: Question[]; results: AnswerResult[] };
+
 export function App() {
   const store = useMemo(() => createProgressStore(pickStore()), []);
   const [topics, setTopics] = useState<TopicFile[] | null>(null);
-  const [progress, setProgress] = useState<Progress>({});
+  const [screen, setScreen] = useState<Screen>({ name: 'home' });
 
   useEffect(() => {
     void (async () => {
-      const [loadedTopics, loadedProgress] = await Promise.all([
+      const [loaded] = await Promise.all([
         Promise.all(topicRefs.map((ref) => ref.load())),
         store.load(),
       ]);
-      setTopics(loadedTopics);
-      setProgress(loadedProgress);
+      setTopics(loaded);
     })();
 
     // Сессия может закрыться в любой момент — досохраняем на уходе со страницы.
@@ -30,61 +34,46 @@ export function App() {
     return () => window.removeEventListener('pagehide', flush);
   }, [store]);
 
-  const questions: Question[] = topics?.flatMap((topic) => topic.questions) ?? [];
-  const answered = Object.values(progress).reduce(
-    (total, topic) => total + Object.keys(topic).length,
-    0,
-  );
-
-  async function answerFirst(correct: boolean) {
-    const [first] = questions;
-    if (!first) return;
-    store.record(first.topic, first.id, correct);
-    await store.flush();
-    setProgress({ ...store.snapshot() });
-  }
-
-  async function reset() {
-    await store.clear();
-    setProgress({});
-  }
-
   if (topics === null) return <p className="hint">Загрузка…</p>;
 
-  return (
-    <main>
-      <h1>Квиз по React Native</h1>
-      <p className="hint">{isTelegram() ? 'Telegram Mini App' : 'Браузер'}</p>
+  function startQuiz(topic: TopicFile) {
+    setScreen({
+      name: 'session',
+      title: topic.title,
+      questions: quizQueue(topic.questions, topic.topic),
+    });
+  }
 
-      <ul>
-        {topics.map((topic) => (
-          <li key={topic.topic}>
-            {topic.title} — {topic.questions.length} вопросов
-          </li>
-        ))}
-      </ul>
+  switch (screen.name) {
+    case 'session':
+      return (
+        <Session
+          title={screen.title}
+          questions={screen.questions}
+          onAnswer={(question, correct) => store.record(question.topic, question.id, correct)}
+          onFinish={(results) => {
+            void store.flush();
+            setScreen({ ...screen, name: 'result', results });
+          }}
+          onExit={() => {
+            void store.flush();
+            setScreen({ name: 'home' });
+          }}
+        />
+      );
 
-      <h2>Прогресс</h2>
-      <ul>
-        <li>Хранилище: {pickStore().kind === 'cloud' ? 'Telegram CloudStorage' : 'localStorage'}</li>
-        <li>Записей: {answered}</li>
-        <li>Пора повторить: {reviewQueue(questions, progress).length}</li>
-        <li>В работе над ошибками: {weakQueue(questions, progress).length}</li>
-      </ul>
+    case 'result':
+      return (
+        <Result
+          results={screen.results}
+          onRestart={() =>
+            setScreen({ name: 'session', title: screen.title, questions: screen.questions })
+          }
+          onHome={() => setScreen({ name: 'home' })}
+        />
+      );
 
-      <p className="hint">
-        Кнопки ниже пишут ответ в первый вопрос — чтобы проверить, что прогресс
-        переживает перезапуск. Уедут вместе с этим экраном.
-      </p>
-      <button type="button" onClick={() => void answerFirst(true)}>
-        Ответить верно
-      </button>{' '}
-      <button type="button" onClick={() => void answerFirst(false)}>
-        Ответить неверно
-      </button>{' '}
-      <button type="button" onClick={() => void reset()}>
-        Сбросить
-      </button>
-    </main>
-  );
+    default:
+      return <Home topics={topics} onPickTopic={startQuiz} />;
+  }
 }
