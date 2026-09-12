@@ -1,4 +1,4 @@
-import type { TopicFile } from './types';
+import type { TopicFile } from './types.ts';
 
 /**
  * Темы находятся глобом по /data, а не по реестру: Vite раскрывает его на

@@ -1,7 +1,7 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
-import { initTelegram } from './telegram/webapp';
-import { App } from './App';
+import { initTelegram } from './telegram/webapp.ts';
+import { App } from './App.tsx';
 import './styles.css';
 
 initTelegram();

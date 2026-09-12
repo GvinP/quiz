@@ -30,6 +30,8 @@ jobs:
         run: npm run validate
       - name: Проверка типов
         run: npm run typecheck
+      - name: Тесты
+        run: npm test
       - run: npm run build
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
