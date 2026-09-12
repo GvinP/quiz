@@ -1,4 +1,5 @@
 import type { TopicFile } from '../data/types.ts';
+import { useBackButton } from '../telegram/useBackButton.ts';
 
 interface TopicsProps {
   topics: TopicFile[];
@@ -7,14 +8,18 @@ interface TopicsProps {
 }
 
 export function Topics({ topics, onPick, onBack }: TopicsProps) {
+  const nativeBack = useBackButton(onBack);
+
   return (
     <div className="screen">
       <div className="content">
-        <header className="session-header">
-          <button type="button" className="link" onClick={onBack}>
-            ← Назад
-          </button>
-        </header>
+        {!nativeBack && (
+          <header className="session-header">
+            <button type="button" className="link" onClick={onBack}>
+              ← Назад
+            </button>
+          </header>
+        )}
 
         <h1>Выбери тему</h1>
         <p className="hint">Вопросы пойдут подряд, в порядке файла.</p>

@@ -1,4 +1,5 @@
 import type { AnswerResult } from './Session.tsx';
+import { useBackButton } from '../telegram/useBackButton.ts';
 
 interface ResultProps {
   results: AnswerResult[];
@@ -16,6 +17,8 @@ function summarize(question: string): string {
 }
 
 export function Result({ results, onRestart, onHome }: ResultProps) {
+  useBackButton(onHome);
+
   const correct = results.filter((result) => result.correct).length;
   const missed = results.filter((result) => !result.correct);
 

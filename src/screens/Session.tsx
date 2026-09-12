@@ -5,6 +5,7 @@ import { Markdown } from '../components/Markdown.tsx';
 import { AnswerOptions } from '../components/AnswerOptions.tsx';
 import { Explanation } from '../components/Explanation.tsx';
 import { haptic } from '../telegram/webapp.ts';
+import { useBackButton } from '../telegram/useBackButton.ts';
 
 export interface AnswerResult {
   question: Question;
@@ -34,6 +35,7 @@ export function Session({ title, questions, onAnswer, onFinish, onExit }: Sessio
   const [selected, setSelected] = useState<number[]>([]);
   const [revealed, setRevealed] = useState(false);
   const [results, setResults] = useState<AnswerResult[]>([]);
+  const nativeBack = useBackButton(onExit);
 
   const question = questions[index];
   const open = isOpen(question);
@@ -83,9 +85,13 @@ export function Session({ title, questions, onAnswer, onFinish, onExit }: Sessio
   return (
     <div className="session">
       <header className="session-header">
-        <button type="button" className="link" onClick={onExit}>
-          ← Выйти
-        </button>
+        {nativeBack ? (
+          <span />
+        ) : (
+          <button type="button" className="link" onClick={onExit}>
+            ← Выйти
+          </button>
+        )}
         <span className="hint">
           {index + 1} / {questions.length}
         </span>
