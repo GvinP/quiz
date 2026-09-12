@@ -44,6 +44,8 @@ interface TelegramWebApp {
   HapticFeedback: TelegramHapticFeedback;
   onEvent(event: 'themeChanged' | 'viewportChanged', handler: () => void): void;
   offEvent(event: 'themeChanged' | 'viewportChanged', handler: () => void): void;
+  /** Появился в Bot API 7.7 — в старых клиентах отсутствует. */
+  disableVerticalSwipes?(): void;
 }
 
 interface Window {

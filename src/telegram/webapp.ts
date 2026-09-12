@@ -26,7 +26,15 @@ function applyTheme(app: TelegramWebApp): void {
   set('--accent-text', params.button_text_color);
   set('--danger', params.destructive_text_color);
 
-  document.documentElement.dataset.theme = app.colorScheme;
+  // Во встроенном браузере Telegram WebApp есть, а themeParams пустой. Если в
+  // этом случае всё равно проставить data-theme, мы навяжем светлую тему в
+  // тёмном клиенте — поэтому стемпим её, только когда цвета реально пришли,
+  // а иначе отдаём решение системной prefers-color-scheme.
+  if (Object.values(params).some(Boolean)) {
+    document.documentElement.dataset.theme = app.colorScheme;
+  } else {
+    delete document.documentElement.dataset.theme;
+  }
 }
 
 /** Высота видимой области клиента: 100vh в Mini App врёт из-за панелей. */
@@ -42,6 +50,10 @@ export function initTelegram(): void {
 
   app.ready();
   app.expand();
+
+  // Вертикальный свайп закрывает Mini App — на экране с длинным разбором это
+  // срабатывает вместо прокрутки. Метода нет в клиентах до Bot API 7.7.
+  app.disableVerticalSwipes?.();
   applyTheme(app);
   applyViewport(app);
 
