@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { topicRefs } from './data/topics.ts';
+import { topicRefs, loadAllTopics } from './data/topics.ts';
 import { createProgressStore } from './progress/store.ts';
 import { pickStore } from './progress/storage.ts';
 import { quizQueue } from './progress/selectors.ts';
@@ -32,7 +32,7 @@ export function App() {
   useEffect(() => {
     void (async () => {
       const [loadedTopics, loadedProgress, saved] = await Promise.all([
-        Promise.all(topicRefs.map((ref) => ref.load())),
+        loadAllTopics(),
         store.load(),
         pendingStore.load(),
       ]);
@@ -59,9 +59,9 @@ export function App() {
     return () => window.removeEventListener('pagehide', flush);
   }, [store, pendingStore]);
 
-  if (topics === null) return <p className="hint">Загрузка…</p>;
-
-  const questions = topics.flatMap((topic) => topic.questions);
+  // Главный экран рисуется сразу: названия и порядок тем известны из реестра,
+  // а счётчики режимов появляются, когда догрузятся сами темы.
+  const questions = topics?.flatMap((topic) => topic.questions) ?? [];
 
   function start(title: string, queue: Question[], answers?: boolean[]) {
     setPending(null);
@@ -78,6 +78,7 @@ export function App() {
 
   switch (screen.name) {
     case 'topics':
+      if (topics === null) return <p className="hint">Загрузка тем…</p>;
       return (
         <Topics
           topics={topics}
@@ -120,8 +121,9 @@ export function App() {
     default:
       return (
         <Home
-          topics={topics}
+          topicCount={topicRefs.length}
           questions={questions}
+          loading={topics === null}
           progress={progress}
           pending={pending}
           onResume={() => pending && start(pending.title, pending.questions, pending.answers)}

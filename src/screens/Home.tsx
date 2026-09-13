@@ -1,4 +1,4 @@
-import type { Question, TopicFile } from '../data/types.ts';
+import type { Question } from '../data/types.ts';
 import type { Progress } from '../progress/types.ts';
 import { reviewQueue, weakQueue, nextDueDay } from '../progress/selectors.ts';
 import { dayNumber } from '../progress/day.ts';
@@ -7,8 +7,10 @@ import { plural, questionsWord, whenNext } from '../format.ts';
 import type { ResolvedSession } from '../session/pending.ts';
 
 interface HomeProps {
-  topics: TopicFile[];
+  /** Известно из реестра сразу, до загрузки самих тем. */
+  topicCount: number;
   questions: Question[];
+  loading: boolean;
   progress: Progress;
   pending: ResolvedSession | null;
   onResume: () => void;
@@ -36,8 +38,9 @@ function Mode({ title, note, disabled, onClick }: ModeProps) {
 }
 
 export function Home({
-  topics,
+  topicCount,
   questions,
+  loading,
   progress,
   pending,
   onResume,
@@ -58,8 +61,8 @@ export function Home({
       <div className="content">
         <h1>Квиз по React Native</h1>
         <p className="hint">
-          {topics.length} {plural(topics.length, 'тема', 'темы', 'тем')}, {questions.length}{' '}
-          {questionsWord(questions.length)}
+          {topicCount} {plural(topicCount, 'тема', 'темы', 'тем')}
+          {!loading && `, ${questions.length} ${questionsWord(questions.length)}`}
           {answered > 0 && ` · отвечено ${answered}`}
         </p>
 
@@ -75,23 +78,27 @@ export function Home({
           <Mode
             title="Повторение"
             note={
-              due.length > 0
-                ? `Вперемешку из всех тем · пора повторить: ${due.length} ${questionsWord(due.length)}`
-                : `Сейчас нечего повторять. ${whenNext(nextDueDay(questions, progress, today), today)}`
+              loading
+                ? 'Вперемешку из всех тем'
+                : due.length > 0
+                  ? `Вперемешку из всех тем · пора повторить: ${due.length} ${questionsWord(due.length)}`
+                  : `Сейчас нечего повторять. ${whenNext(nextDueDay(questions, progress, today), today)}`
             }
-            disabled={due.length === 0}
+            disabled={loading || due.length === 0}
             onClick={() => onReview(due)}
           />
           <Mode
             title="Работа над ошибками"
             note={
-              weak.length > 0
-                ? `Доля верных ниже ${Math.round(WEAK_RATIO * 100)}% · ${weak.length} ${questionsWord(weak.length)}`
-                : answered === 0
-                  ? 'Появится, когда будет на чём ошибаться.'
-                  : 'Пусто — устойчивых ошибок пока нет.'
+              loading
+                ? 'Вопросы, на которых стабильно ошибаешься'
+                : weak.length > 0
+                  ? `Доля верных ниже ${Math.round(WEAK_RATIO * 100)}% · ${weak.length} ${questionsWord(weak.length)}`
+                  : answered === 0
+                    ? 'Появится, когда будет на чём ошибаться.'
+                    : 'Пусто — устойчивых ошибок пока нет.'
             }
-            disabled={weak.length === 0}
+            disabled={loading || weak.length === 0}
             onClick={() => onWeak(weak)}
           />
         </ul>
