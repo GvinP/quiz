@@ -18,7 +18,11 @@ export type SelfGrade = 'knew' | 'partly' | 'missed';
 interface SessionProps {
   title: string;
   questions: Question[];
+  /** Ответы восстановленной сессии: сколько их, с того вопроса и продолжаем. */
+  initialAnswers?: boolean[];
   onAnswer: (question: Question, correct: boolean) => void;
+  /** Зовётся после каждого ответа, чтобы сессию можно было продолжить позже. */
+  onProgress: (answers: boolean[]) => void;
   onFinish: (results: AnswerResult[]) => void;
   onExit: () => void;
 }
@@ -30,11 +34,24 @@ const sameSet = (a: number[], b: number[]): boolean =>
  * Движок прохождения, общий для всех трёх режимов: получает готовую очередь и
  * ничего не знает о том, как она собрана.
  */
-export function Session({ title, questions, onAnswer, onFinish, onExit }: SessionProps) {
-  const [index, setIndex] = useState(0);
+export function Session({
+  title,
+  questions,
+  initialAnswers,
+  onAnswer,
+  onProgress,
+  onFinish,
+  onExit,
+}: SessionProps) {
+  const [index, setIndex] = useState(initialAnswers?.length ?? 0);
   const [selected, setSelected] = useState<number[]>([]);
   const [revealed, setRevealed] = useState(false);
-  const [results, setResults] = useState<AnswerResult[]>([]);
+  const [results, setResults] = useState<AnswerResult[]>(() =>
+    (initialAnswers ?? []).map((correct, position) => ({
+      question: questions[position],
+      correct,
+    })),
+  );
   const nativeBack = useBackButton(onExit);
 
   // Следующий вопрос должен открываться сверху. Сейчас браузер и так зажимает
@@ -67,16 +84,20 @@ export function Session({ title, questions, onAnswer, onFinish, onExit }: Sessio
     const correct = sameSet(picked, question.correct);
     haptic(correct ? 'correct' : 'wrong');
     setRevealed(true);
-    setResults((current) => [...current, { question, correct }]);
+    const collected = [...results, { question, correct }];
+    setResults(collected);
     onAnswer(question, correct);
+    onProgress(collected.map((result) => result.correct));
   }
 
   function grade(value: SelfGrade) {
     const correct = value === 'knew';
     haptic(correct ? 'correct' : 'wrong');
-    setResults((current) => [...current, { question, correct }]);
+    const collected = [...results, { question, correct }];
+    setResults(collected);
     onAnswer(question, correct);
-    advance([...results, { question, correct }]);
+    onProgress(collected.map((result) => result.correct));
+    advance(collected);
   }
 
   function advance(collected: AnswerResult[] = results) {

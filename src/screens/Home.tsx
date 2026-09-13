@@ -4,11 +4,14 @@ import { reviewQueue, weakQueue, nextDueDay } from '../progress/selectors.ts';
 import { dayNumber } from '../progress/day.ts';
 import { WEAK_RATIO } from '../progress/leitner.ts';
 import { plural, questionsWord, whenNext } from '../format.ts';
+import type { ResolvedSession } from '../session/pending.ts';
 
 interface HomeProps {
   topics: TopicFile[];
   questions: Question[];
   progress: Progress;
+  pending: ResolvedSession | null;
+  onResume: () => void;
   onQuiz: () => void;
   onReview: (questions: Question[]) => void;
   onWeak: (questions: Question[]) => void;
@@ -32,7 +35,16 @@ function Mode({ title, note, disabled, onClick }: ModeProps) {
   );
 }
 
-export function Home({ topics, questions, progress, onQuiz, onReview, onWeak }: HomeProps) {
+export function Home({
+  topics,
+  questions,
+  progress,
+  pending,
+  onResume,
+  onQuiz,
+  onReview,
+  onWeak,
+}: HomeProps) {
   const today = dayNumber();
   const due = reviewQueue(questions, progress, today);
   const weak = weakQueue(questions, progress);
@@ -52,6 +64,13 @@ export function Home({ topics, questions, progress, onQuiz, onReview, onWeak }: 
         </p>
 
         <ul className="cards">
+          {pending && (
+            <Mode
+              title="Продолжить"
+              note={`${pending.title} · вопрос ${pending.answers.length + 1} из ${pending.questions.length}`}
+              onClick={onResume}
+            />
+          )}
           <Mode title="Квиз" note="Вопросы одной темы подряд" onClick={onQuiz} />
           <Mode
             title="Повторение"
