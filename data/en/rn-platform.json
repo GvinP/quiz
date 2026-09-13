@@ -1,0 +1,272 @@
+{
+  "topic": "rn-platform",
+  "title": "React Native: Platform and Releases",
+  "version": 1,
+  "questions": [
+    {
+      "id": "rn-plat-001",
+      "topic": "rn-platform",
+      "type": "multi",
+      "question": "What CAN be updated through CodePush / EAS Update?",
+      "options": [
+        "JS code and styles",
+        "Images and other JS assets",
+        "Native dependencies and app permissions",
+        "The app icon and the splash screen"
+      ],
+      "correct": [0, 1],
+      "explanation": "OTA replaces the JS bundle and its assets. Native code, new native dependencies, permissions, the RN version, the icon and the splash screen all require a full store release. Critical to remember: an OTA bundle is tied to a native version — a mismatch crashes on a missing native module.",
+      "followUp": ["How is the rollback strategy set up for a bad OTA bundle?"],
+      "difficulty": 1
+    },
+    {
+      "id": "rn-plat-002",
+      "topic": "rn-platform",
+      "type": "single",
+      "question": "Why should an OTA update be rolled out by percentage rather than to everyone at once?",
+      "options": [
+        "To reduce CDN load",
+        "Because otherwise a bad bundle reaches everyone instantly, and you are rolling back after the incident rather than before it",
+        "App Store rules require it",
+        "To have time to collect analytics on the new feature"
+      ],
+      "correct": [1],
+      "explanation": "Unlike a store release, OTA has no review and no natural delay — the update reaches everyone within minutes. Hence percentage rollout, watching the crash-free rate after each step, and a rollback mechanism ready to go.",
+      "followUp": ["How do you tie a crash in Sentry to a specific OTA bundle?"],
+      "difficulty": 2
+    },
+    {
+      "id": "rn-plat-003",
+      "topic": "rn-platform",
+      "type": "single",
+      "question": "What is different about push delivery on AppGallery?",
+      "options": [
+        "Nothing, FCM works everywhere",
+        "On devices without GMS you need HMS Push Kit; FCM is unavailable",
+        "Push only works there for paid apps",
+        "AppGallery does not support push at all"
+      ],
+      "correct": [1],
+      "explanation": "Huawei without Google Mobile Services means no FCM, and no Google Maps or Google location either — you need the HMS equivalents. The architectural consequence: put an abstraction over the push provider so the app does not know which service this particular build uses.",
+      "followUp": ["How do you support four distributions from one codebase?"],
+      "difficulty": 2
+    },
+    {
+      "id": "rn-plat-004",
+      "topic": "rn-platform",
+      "type": "single",
+      "question": "A user taps a push notification while the app was killed. What has to be handled?",
+      "options": [
+        "Nothing, navigation works automatically",
+        "Store the payload and navigate once the navigator is initialised, not the moment it arrives",
+        "Block the app from opening until data has loaded",
+        "Show a loading screen for a fixed 3 seconds"
+      ],
+      "correct": [1],
+      "explanation": "On a cold start the navigator is not mounted yet, and an attempt to navigate is simply lost. The payload has to be kept and applied once navigation is ready. The same applies to deep links: getInitialURL on a cold start, and an event subscription while the app is running.",
+      "followUp": ["What if the destination screen requires authentication?"],
+      "difficulty": 3
+    },
+    {
+      "id": "rn-plat-005",
+      "topic": "rn-platform",
+      "type": "single",
+      "question": "Why are Universal Links better than a custom `myapp://` scheme?",
+      "options": [
+        "They are shorter and look nicer",
+        "They are ordinary https links with verified domain ownership: the app opens, and if it is not installed, the website does",
+        "They work without an internet connection",
+        "They need no configuration on the app side"
+      ],
+      "correct": [1],
+      "explanation": "Any app can register a custom scheme, and if yours is not installed the link simply leads nowhere. Universal Links (iOS, via apple-app-site-association) and App Links (Android, via assetlinks.json and autoVerify) prove domain ownership and degrade gracefully to the web.",
+      "followUp": ["What is a deferred deep link and why do you need an attribution service?"],
+      "difficulty": 2
+    },
+    {
+      "id": "rn-plat-006",
+      "topic": "rn-platform",
+      "type": "single",
+      "question": "What is a deferred deep link?",
+      "options": [
+        "A link that opens with a delay after the app launches",
+        "A link that sends you to the store, and after install the app receives the original context through an attribution service",
+        "A link that only works on a second open",
+        "A link that requires authentication before it resolves"
+      ],
+      "correct": [1],
+      "explanation": "Without this mechanism a user who followed a link to a specific product and then installed the app would land on the home screen — the context would be lost crossing the store. Adjust and AppsFlyer exist to solve exactly this.",
+      "followUp": ["How did you verify this worked after migrating the Adjust SDK?"],
+      "difficulty": 3
+    },
+    {
+      "id": "rn-plat-007",
+      "topic": "rn-platform",
+      "type": "single",
+      "question": "Where should auth tokens be stored in a mobile app?",
+      "options": [
+        "In AsyncStorage — it is the standard storage",
+        "In the Keychain (iOS) and the Keystore (Android)",
+        "In memory, requesting them again every time",
+        "Encrypted in MMKV with the key in the code"
+      ],
+      "correct": [1],
+      "explanation": "AsyncStorage is plain files or SQLite with no protection: on a rooted device it reads out easily. Keychain/Keystore use the platform's hardware-backed protection. Separately: an encryption key baked into the JS bundle is not protection — the bundle is extracted from an APK in under a minute.",
+      "followUp": ["Why should secrets never live in the JS bundle at all?"],
+      "difficulty": 1
+    },
+    {
+      "id": "rn-plat-008",
+      "topic": "rn-platform",
+      "type": "single",
+      "question": "What are feature flags for in a mobile app?",
+      "options": [
+        "To reduce the bundle size",
+        "To ship code switched off and enable it separately from the release, plus a kill switch during an incident",
+        "To support several API versions",
+        "To separate dev and prod builds"
+      ],
+      "correct": [1],
+      "explanation": "Rolling back a mobile release costs days, so being able to turn a feature off without shipping is critical. The subtleties: the flag must arrive before the screen that depends on it renders (otherwise it flickers), you need defaults for when the config is unreachable, and flags must be deleted — otherwise the code becomes a maze within a year.",
+      "followUp": ["How do flags relate to A/B experiments?"],
+      "difficulty": 1
+    },
+    {
+      "id": "rn-plat-009",
+      "topic": "rn-platform",
+      "type": "single",
+      "question": "Why do you need a force-update mechanism?",
+      "options": [
+        "To make users open the app more often",
+        "Because old builds live for months, and sometimes you have to cut off versions that API compatibility cannot carry",
+        "To bypass store review",
+        "To keep versions in sync across platforms"
+      ],
+      "correct": [1],
+      "explanation": "The defining feature of mobile development: you cannot \"just deploy\". Some users do not update for years. The API has to stay backwards compatible, and for genuinely ancient builds you need a blocking screen demanding an update. Choosing the minimum supported version is a product decision, not just a technical one.",
+      "followUp": ["How do you pick the minimum supported app version?"],
+      "difficulty": 2
+    },
+    {
+      "id": "rn-plat-010",
+      "topic": "rn-platform",
+      "type": "single",
+      "question": "What does it take to get readable Sentry stack traces from a release build?",
+      "options": [
+        "Turn minification off",
+        "Upload Hermes source maps and iOS dSYMs on every build, tied to the release",
+        "Enable debug mode in production",
+        "Use Crashlytics instead of Sentry"
+      ],
+      "correct": [1],
+      "explanation": "Hermes executes bytecode, so without source maps the report shows positions inside the .hbc. Native iOS crashes need dSYMs. Uploading has to be part of CI, or sooner or later a release ships without symbols — and that is exactly the one with the interesting crash.",
+      "followUp": ["Walk through a production Android crash you actually debugged."],
+      "difficulty": 2
+    },
+    {
+      "id": "rn-plat-011",
+      "topic": "rn-platform",
+      "type": "single",
+      "question": "What do you do about flaky e2e tests?",
+      "options": [
+        "Turn them off — they get in the way of releases",
+        "Fix the cause: non-deterministic data, race conditions, real network; flakiness destroys trust in the whole suite",
+        "Run them three times and treat any green run as a pass",
+        "Downgrade them to optional checks"
+      ],
+      "correct": [1],
+      "explanation": "A suite nobody trusts is useless: the team starts re-running the pipeline without reading the report. Determinism comes from network mocks or a stable test environment, waiting on state instead of timeouts, and isolating data between tests. A report (Allure) exists so the team reads the result, not only the test's author.",
+      "followUp": ["What do you cover with e2e, and what do you deliberately leave uncovered?"],
+      "difficulty": 2
+    },
+    {
+      "id": "rn-plat-012",
+      "topic": "rn-platform",
+      "type": "single",
+      "question": "How do you get dev, staging and prod builds installed on one device at the same time?",
+      "options": [
+        "Rename the app in the project settings",
+        "Use different bundle identifiers / applicationIds via schemes (iOS) and product flavors (Android)",
+        "Install them under different user profiles",
+        "It is impossible on iOS"
+      ],
+      "correct": [1],
+      "explanation": "The identifier is what the OS uses to tell apps apart. Separate schemes and flavors give separate identifiers, icons and names, plus their own endpoint and key configuration. A must for a team: a tester needs prod and staging side by side.",
+      "followUp": ["How do you store different keys and endpoints per configuration?"],
+      "difficulty": 1
+    },
+    {
+      "id": "rn-plat-013",
+      "topic": "rn-platform",
+      "type": "single",
+      "question": "What happens if you lose the keystore and Play App Signing is not enabled?",
+      "options": [
+        "Nothing, Google restores it on request",
+        "The app can never be updated — you have to publish a new one under a different applicationId",
+        "You have to go through review again",
+        "Updates still ship, just unsigned"
+      ],
+      "correct": [1],
+      "explanation": "Android only trusts an update signed with the same key. With Play App Signing enabled, Google holds the key and the developer signs with an upload key, which can be reissued. That is why a keystore is kept as a secret at the level of production access.",
+      "followUp": ["How are signing keys and certificates stored in CI?"],
+      "difficulty": 2
+    },
+    {
+      "id": "rn-plat-014",
+      "topic": "rn-platform",
+      "type": "multi",
+      "question": "How do you reduce the size of an Android app?",
+      "options": [
+        "App Bundle with splits by ABI and screen density",
+        "R8/Proguard stripping unused code",
+        "WebP instead of PNG and vectors instead of raster",
+        "Turning Hermes off"
+      ],
+      "correct": [0, 1, 2],
+      "explanation": "Plus removing unused native dependencies and surplus localisations. Hermes, on the contrary, usually reduces size and speeds up startup — there is no reason to disable it for size. Size directly affects install conversion, especially on a slow connection.",
+      "followUp": ["What do you use to analyse what actually takes up space in an APK?"],
+      "difficulty": 2
+    },
+    {
+      "id": "rn-plat-015",
+      "topic": "rn-platform",
+      "type": "single",
+      "question": "Why have a single analytics layer instead of calls from components?",
+      "options": [
+        "It is less code",
+        "Typed events in one place: you cannot typo a name, it is easy to test, and easy to add a queue for when the network is down",
+        "Components have no access to the analytics SDK",
+        "Store rules require it"
+      ],
+      "correct": [1],
+      "explanation": "Analytics scattered across components breaks quietly: an event gets renamed in one place and missed in another, and a product metric lies for weeks until somebody notices. A single entry point plus typed names (template literal types) removes a whole class of these problems.",
+      "followUp": ["How do you test that events are actually being sent?"],
+      "difficulty": 2
+    },
+    {
+      "id": "rn-plat-016",
+      "topic": "rn-platform",
+      "type": "single",
+      "question": "The main pain of a monorepo with internal packages is…",
+      "options": [
+        "Repository size",
+        "Duplicate dependencies, which break singletons, instanceof and React hooks",
+        "Not being able to use TypeScript",
+        "Lack of Metro support"
+      ],
+      "correct": [1],
+      "explanation": "Modules are cached by resolved path: two copies of a package are two different modules. Hence \"Invalid hook call\" with a duplicated React, and singletons that do not work in shared packages. The cure is deduplication, hoisting, resolutions/overrides and Metro resolver configuration. The second big question is ownership of shared code: who is responsible for a package five teams depend on.",
+      "followUp": ["How do you avoid breaking neighbouring teams when changing a shared package?"],
+      "difficulty": 3
+    },
+    {
+      "id": "rn-plat-017",
+      "topic": "rn-platform",
+      "type": "open",
+      "question": "Tell me about the hardest production bug you have fixed. What happened, how did you search, how did it end?",
+      "explanation": "This is not a technical question but a test of engineering thinking. The structure of a strong answer:\n\n1. **Context and symptom** — what users saw and what the metrics showed\n2. **Why it was hard** — no reproduction, only on some devices, the stack trace was useless\n3. **How you narrowed it down** — which hypotheses you discarded and on what evidence\n4. **The cause** — specific and comprehensible\n5. **What you did so it cannot recur** — a test, a metric, an alert, a process change\n\nPoint 5 is what separates a senior answer from an ordinary one: everyone can fix a bug, far fewer close off a class of bugs. Keep two or three of these stories ready so you are not recalling them on the spot.",
+      "followUp": ["What would you do differently if you started the investigation again?"],
+      "difficulty": 3
+    }
+  ]
+}
