@@ -1,0 +1,215 @@
+{
+  "topic": "algorithms",
+  "title": "Algorithms and Live Coding",
+  "version": 1,
+  "questions": [
+    {
+      "id": "algo-001",
+      "topic": "algorithms",
+      "type": "single",
+      "question": "How do you start solving a live coding problem?",
+      "options": [
+        "Start writing code straight away — time is limited",
+        "Clarify the problem: input format, constraints, edge cases",
+        "State the complexity of the optimal solution",
+        "Write the tests"
+      ],
+      "correct": [1],
+      "explanation": "One or two clarifying questions noticeably raise your score: they show you do not rush into code on an incomplete problem statement. Then walk through an example by hand, name the naive solution and its complexity, propose the optimal one, and only then write. Coding in silence is the main mistake.",
+      "followUp": ["What do you do if you get stuck mid-solution?"],
+      "difficulty": 1
+    },
+    {
+      "id": "algo-002",
+      "topic": "algorithms",
+      "type": "single",
+      "question": "You need to find two numbers in an array with a given sum. The optimal solution?",
+      "options": [
+        "Two nested loops — O(n²)",
+        "A single pass with a Map of value → index — O(n)",
+        "Sort and walk with two pointers — O(n log n)",
+        "Recursively enumerate every pair"
+      ],
+      "correct": [1],
+      "explanation": "At each step you check whether the complement target - nums[i] has already been seen. The general pattern: if you are looking for a pair, a duplicate or a frequency, you almost certainly want a Map or a Set. The sorting variant works but is slower and destroys the original indices.",
+      "followUp": ["How does the solution change if you need every pair rather than the first?"],
+      "difficulty": 1
+    },
+    {
+      "id": "algo-003",
+      "topic": "algorithms",
+      "type": "single",
+      "question": "What is the complexity of arr.includes(x) and set.has(x)?",
+      "options": ["O(1) and O(1)", "O(n) and O(1)", "O(log n) and O(1)", "O(n) and O(log n)"],
+      "correct": [1],
+      "explanation": "An array searches by linear scan, a Set by hash. Inside a loop that is the difference between O(n²) and O(n): the classic optimisation expected in problems about duplicates and intersections.",
+      "followUp": ["What is the complexity of sort, indexOf and splice?"],
+      "difficulty": 1
+    },
+    {
+      "id": "algo-004",
+      "topic": "algorithms",
+      "type": "single",
+      "question": "\"Longest substring without repeating characters.\" Which pattern?",
+      "options": [
+        "Dynamic programming",
+        "A sliding window with a Map of the last position of each character",
+        "Binary search over the answer length",
+        "Recursive enumeration of substrings"
+      ],
+      "correct": [1],
+      "explanation": "The sign of a window: you are looking for a subarray or substring satisfying a condition. The right edge always moves forward, the left one catches up when the condition breaks. Complexity O(n) — each character is processed a constant number of times.",
+      "followUp": ["What other problems does a sliding window solve?"],
+      "difficulty": 2
+    },
+    {
+      "id": "algo-005",
+      "topic": "algorithms",
+      "type": "single",
+      "question": "Which data structure do you need to check balanced brackets?",
+      "options": ["A queue", "A stack", "A hash table", "A doubly linked list"],
+      "correct": [1],
+      "explanation": "Push an opening bracket onto the stack, and on a closing one pop and check the pair. At the end the stack must be empty. A stack is needed wherever there is nesting: brackets, navigation history, traversing a tree without recursion, \"next greater element\".",
+      "followUp": ["How do you implement a queue using two stacks?"],
+      "difficulty": 1
+    },
+    {
+      "id": "algo-006",
+      "topic": "algorithms",
+      "type": "single",
+      "question": "What is the most common mistake in binary search?",
+      "options": [
+        "Picking the midpoint wrongly",
+        "The condition lo < hi instead of lo <= hi, and updating bounds without mid ± 1 — hence a skipped element or an infinite loop",
+        "Using recursion instead of a loop",
+        "Not checking for an empty array"
+      ],
+      "correct": [1],
+      "explanation": "Writing hi = mid instead of hi = mid - 1 can leave the loop unable to terminate once the range narrows to two elements. (lo + hi) >> 1 also settles the rounding question. And of course the array has to be sorted — worth asking about during clarifications.",
+      "followUp": ["How do you find the first occurrence when there are several?"],
+      "difficulty": 2
+    },
+    {
+      "id": "algo-007",
+      "topic": "algorithms",
+      "type": "single",
+      "question": "How does BFS differ from DFS, and when do you pick each?",
+      "options": [
+        "BFS uses a stack, DFS a queue",
+        "BFS walks level by level using a queue and finds the shortest path in an unweighted graph; DFS goes deep using a stack or recursion",
+        "DFS is always faster",
+        "BFS only works on trees"
+      ],
+      "correct": [1],
+      "explanation": "BFS when you need the shortest path or a level-order walk. DFS when you need to visit everything, find connected components, or detect a cycle. At great depth a recursive DFS risks a stack overflow — then use an explicit stack.",
+      "followUp": ["How do you walk a catalogue category tree and collect the path to an item?"],
+      "difficulty": 2
+    },
+    {
+      "id": "algo-008",
+      "topic": "algorithms",
+      "type": "single",
+      "question": "A flat list of categories with parentId has to become a tree. The optimal solution?",
+      "options": [
+        "For each item, scan the whole array for its children — O(n²)",
+        "One pass to build a Map by id, then one pass adding each item to its parent's children — O(n)",
+        "Build recursively from the root, filtering the array at every level",
+        "Sort by parentId and walk once"
+      ],
+      "correct": [1],
+      "explanation": "First build Map<id, {...item, children: []}>, then in a second pass put every item into its parent's children, with parentless items becoming roots. O(n) in time and memory. A practical problem that front-end interviews ask more often than algorithmic ones.",
+      "followUp": ["How do you do the reverse — a tree back into a flat list?"],
+      "difficulty": 2
+    },
+    {
+      "id": "algo-009",
+      "topic": "algorithms",
+      "type": "code-output",
+      "question": "What does [10, 9, 1].sort() return?",
+      "options": ["[1, 9, 10]", "[1, 10, 9]", "[10, 9, 1]", "[9, 10, 1]"],
+      "correct": [1],
+      "explanation": "By default sort converts elements to strings and compares them lexicographically: '1' < '10' < '9'. You need a comparator: sort((a, b) => a - b). A favourite interview trap. The built-in sort in V8 is TimSort — stable, O(n log n).",
+      "followUp": ["What does \"stable sort\" mean and when does it matter?"],
+      "difficulty": 1
+    },
+    {
+      "id": "algo-010",
+      "topic": "algorithms",
+      "type": "single",
+      "question": "What is the worst-case complexity of quicksort?",
+      "options": ["O(n log n)", "O(n²)", "O(n)", "O(log n)"],
+      "correct": [1],
+      "explanation": "With an unlucky pivot (always the minimum on already-sorted data, for instance) the partitioning degenerates. On average it is O(n log n) with a small constant and sorts in place. Mergesort gives guaranteed O(n log n) and stability, but needs O(n) extra memory.",
+      "followUp": ["Why is mergesort chosen for large external data?"],
+      "difficulty": 2
+    },
+    {
+      "id": "algo-011",
+      "topic": "algorithms",
+      "type": "single",
+      "question": "How do you implement an LRU cache with O(1) get and set?",
+      "options": [
+        "An array, scanning for the oldest element on eviction",
+        "A Map: on access, delete and reinsert — insertion order becomes usage order, and you evict the first key",
+        "An object with a timestamp field on every entry",
+        "Two arrays: keys and values"
+      ],
+      "correct": [1],
+      "explanation": "A JS Map preserves insertion order, and map.keys().next().value gives the oldest key in O(1). Deleting and reinserting moves an entry to the end. The classic implementation with a hash table and a doubly linked list does the same thing by hand — worth mentioning.",
+      "followUp": ["Where do you need an LRU in a mobile app?"],
+      "difficulty": 3
+    },
+    {
+      "id": "algo-012",
+      "topic": "algorithms",
+      "type": "single",
+      "question": "Which problems come up in front-end interviews more often than classic algorithmic ones?",
+      "options": [
+        "Dynamic programming and graphs",
+        "debounce, throttle, curry, memoize, Promise.all by hand, a simple EventEmitter",
+        "Bit manipulation problems",
+        "Geometry problems"
+      ],
+      "correct": [1],
+      "explanation": "These test whether you understand closures, promises and asynchrony — the tools you use every day. Those five or six functions are worth being able to write without hesitation: they give the highest return per unit of preparation.",
+      "followUp": ["Write mapWithLimit(items, fn, limit) with a concurrency limit"],
+      "difficulty": 1
+    },
+    {
+      "id": "algo-013",
+      "topic": "algorithms",
+      "type": "single",
+      "question": "What is the complexity of Kadane's algorithm for the maximum subarray sum?",
+      "options": ["O(n²)", "O(n log n)", "O(n)", "O(1)"],
+      "correct": [2],
+      "explanation": "A single pass: at each step you decide whether to extend the current subarray or start a new one at the current element, keeping the maximum. The idea of \"a local optimum at each step plus a global maximum\" is the simplest example of dynamic programming worth knowing.",
+      "followUp": ["How does the solution change if you have to return the subarray bounds?"],
+      "difficulty": 2
+    },
+    {
+      "id": "algo-014",
+      "topic": "algorithms",
+      "type": "single",
+      "question": "What do you do when the optimal solution does not come to mind?",
+      "options": [
+        "Think in silence until the end",
+        "Say the naive solution out loud, write it, then improve — a working O(n²) beats an unwritten O(n)",
+        "Ask for a different problem",
+        "Start writing code and hope the idea arrives along the way"
+      ],
+      "correct": [1],
+      "explanation": "The interviewer is assessing your thinking process, not only the result. Saying out loud where exactly you are stuck almost always leads to a hint and is not held against you. What is held against you is two minutes of silence. It also helps to ask about the constraints: sometimes \"n up to 100\" means brute force is acceptable.",
+      "followUp": ["Why is it worth leaving time to test your own solution?"],
+      "difficulty": 1
+    },
+    {
+      "id": "algo-015",
+      "topic": "algorithms",
+      "type": "open",
+      "question": "Write a function with a concurrency limit: mapWithLimit(items, fn, limit). Explain your solution out loud.",
+      "explanation": "The problem tests your understanding of promises and of the fact that Promise.all does not control load.\n\n```js\nasync function mapWithLimit(items, fn, limit) {\n  const results = new Array(items.length);\n  let next = 0;\n\n  async function worker() {\n    while (next < items.length) {\n      const i = next++;              // capture the index before awaiting\n      results[i] = await fn(items[i], i);\n    }\n  }\n\n  const workers = Array.from(\n    { length: Math.min(limit, items.length) },\n    worker\n  );\n  await Promise.all(workers);\n  return results;\n}\n```\n\nThe key points worth saying out loud: results are written by index (order is preserved), the index is captured before the await (otherwise you get a race), and you start no more workers than there are items. Mention separately that an error on one item rejects the whole function — and ask whether allSettled behaviour is wanted.",
+      "followUp": ["How would you add retries with exponential backoff?"],
+      "difficulty": 3
+    }
+  ]
+}

@@ -1,0 +1,192 @@
+{
+  "topic": "git-workflow",
+  "title": "Git and Development Process",
+  "version": 1,
+  "questions": [
+    {
+      "id": "git-001",
+      "topic": "git-workflow",
+      "type": "single",
+      "question": "How does merge differ from rebase?",
+      "options": [
+        "Merge deletes the branch, rebase keeps it",
+        "Merge creates a merge commit and keeps history as it happened; rebase replays commits on top of another branch, rewriting them",
+        "Rebase only works with remote branches",
+        "Merge is faster because it does not touch the commits"
+      ],
+      "correct": [1],
+      "explanation": "Merge reflects honestly what happened, at the cost of a branching history. Rebase gives a linear history but creates new commits with new hashes. The rule: never rebase a public branch others are building on — they will be left untangling diverged history.",
+      "followUp": ["What is a squash merge and when is it appropriate?"],
+      "difficulty": 1
+    },
+    {
+      "id": "git-002",
+      "topic": "git-workflow",
+      "type": "single",
+      "question": "You accidentally committed and pushed a secret key. What do you do?",
+      "options": [
+        "Make a new commit that deletes the file",
+        "Revoke and reissue the key immediately, then clean the history — the key is already compromised",
+        "Do a git reset --hard and force-push",
+        "Add the file to .gitignore"
+      ],
+      "correct": [1],
+      "explanation": "The order is what matters here: rotate the secret first, clean the history second. The key is already in clones, CI logs, caches and possibly GitHub's own scanners. Removing it from history (filter-repo, BFG) erases the trace but does not undo the leak. An answer that starts with cleaning history shows a misunderstanding of the threat model.",
+      "followUp": ["How do you prevent this in future — pre-commit hooks, secret scanners?"],
+      "difficulty": 2
+    },
+    {
+      "id": "git-003",
+      "topic": "git-workflow",
+      "type": "single",
+      "question": "What does git cherry-pick do?",
+      "options": [
+        "Moves a single commit from one branch to another",
+        "Selects a branch to merge",
+        "Rolls back the last commit",
+        "Squashes several commits into one"
+      ],
+      "correct": [0],
+      "explanation": "The typical scenario is a hotfix: fixed on the release branch, carried over to main. It creates a new commit with a different hash, so overusing cherry-pick leads to duplicated changes and conflicts when the branches are later merged.",
+      "followUp": ["How does cherry-pick differ from revert?"],
+      "difficulty": 1
+    },
+    {
+      "id": "git-004",
+      "topic": "git-workflow",
+      "type": "single",
+      "question": "How does git revert differ from git reset?",
+      "options": [
+        "They do not differ, two names for one operation",
+        "Revert creates a new commit undoing the changes (safe on a shared branch); reset moves the pointer, rewriting history",
+        "Revert removes the commit from history",
+        "Reset only works on staged files"
+      ],
+      "correct": [1],
+      "explanation": "On a shared branch you use revert: the history stays and the rollback is visible. Reset belongs locally, before a push. reset --hard additionally throws away working directory changes — the most common way beginners lose work (git reflog is the rescue).",
+      "followUp": ["How do you recover lost commits through the reflog?"],
+      "difficulty": 2
+    },
+    {
+      "id": "git-005",
+      "topic": "git-workflow",
+      "type": "single",
+      "question": "What is trunk-based development?",
+      "options": [
+        "A model with long-lived develop and release branches",
+        "Everyone works off main in short branches, merges often, and hides unfinished work behind feature flags",
+        "Development with no branches at all",
+        "A model where each team has its own permanent branch"
+      ],
+      "correct": [1],
+      "explanation": "The main benefit is few conflicts and fast feedback, because branches live hours or days rather than weeks. It requires mature CI and feature flags. Git Flow with long branches remains justified where several released versions have to be supported in parallel — which is exactly the case in mobile development.",
+      "followUp": ["Why are release branches still needed in mobile development?"],
+      "difficulty": 2
+    },
+    {
+      "id": "git-006",
+      "topic": "git-workflow",
+      "type": "multi",
+      "question": "What makes a code review useful?",
+      "options": [
+        "A small MR — a large review gets skimmed",
+        "A clear description: what, why and how to verify",
+        "Separating blocking comments from optional ones",
+        "The most detailed possible review of style and formatting"
+      ],
+      "correct": [0, 1, 2],
+      "explanation": "Formatting and style should be checked automatically by a linter and a formatter — a human spends their attention on logic, edge cases and architecture. Explicitly marking something \"optional, your call\" saves time and lowers friction in the team.",
+      "followUp": ["How do you behave when you disagree with a reviewer's comment?"],
+      "difficulty": 1
+    },
+    {
+      "id": "git-007",
+      "topic": "git-workflow",
+      "type": "single",
+      "question": "What is git bisect?",
+      "options": [
+        "Splitting a commit into several",
+        "A binary search for the commit that broke a behaviour",
+        "Comparing two branches",
+        "Splitting a repository into two"
+      ],
+      "correct": [1],
+      "explanation": "You name a known-good and a known-bad commit, and git halves the range until it hands you the culprit in log₂(n) steps. Over a thousand commits that is about ten checks. Indispensable for regressions, and widely forgotten.",
+      "followUp": ["How do you automate bisect with a test script?"],
+      "difficulty": 2
+    },
+    {
+      "id": "git-008",
+      "topic": "git-workflow",
+      "type": "single",
+      "question": "Why do atomic commits matter?",
+      "options": [
+        "So the history looks tidy",
+        "So one logical change can be reverted, moved or found by bisect without dragging the rest along",
+        "To reduce repository size",
+        "To make git faster"
+      ],
+      "correct": [1],
+      "explanation": "A \"fixed everything\" commit cannot be selectively reverted, reviewed or found by bisect. One commit, one logical change, and the message explains the why rather than the what (the what is already in the diff).",
+      "followUp": ["How do you split changes you have already made into atomic commits?"],
+      "difficulty": 1
+    },
+    {
+      "id": "git-009",
+      "topic": "git-workflow",
+      "type": "single",
+      "question": "What should CI check on every MR?",
+      "options": [
+        "The build only",
+        "Lint, types, unit tests, build; e2e where feasible or nightly",
+        "Only e2e tests — they are the most reliable",
+        "Nothing, check at release time"
+      ],
+      "correct": [1],
+      "explanation": "The principle: fast checks on every MR, slow ones less often. If the pipeline takes 40 minutes, developers stop waiting for the result and merge blind. It is also worth checking what is specific to the project: data validity, bundle size, no new type suppressions.",
+      "followUp": ["How do you speed up a pipeline without sacrificing reliability?"],
+      "difficulty": 1
+    },
+    {
+      "id": "git-010",
+      "topic": "git-workflow",
+      "type": "single",
+      "question": "What is semantic versioning?",
+      "options": [
+        "MAJOR.MINOR.PATCH: breaking changes, new functionality, fixes",
+        "Numbering by release date",
+        "The sequential build number from CI",
+        "A version matching that of a dependency"
+      ],
+      "correct": [0],
+      "explanation": "In a monorepo with internal packages this is critical: bumping MAJOR in a shared package signals to neighbouring teams that they will have to fix code. In a mobile app the store version follows its own rules (versionCode may only increase), and should not be confused with an npm package version.",
+      "followUp": ["What do ^1.2.3 and ~1.2.3 mean in package.json?"],
+      "difficulty": 1
+    },
+    {
+      "id": "git-011",
+      "topic": "git-workflow",
+      "type": "single",
+      "question": "What is a lock file for?",
+      "options": [
+        "It locks the repository against concurrent changes",
+        "It pins the exact versions of the whole dependency tree so builds are reproducible",
+        "It speeds up dependency installation",
+        "It protects against installing vulnerable packages"
+      ],
+      "correct": [1],
+      "explanation": "Without it, ^1.2.3 installs a different version tomorrow and the CI build differs from the local one. A lock file must be committed. In CI, install with npm ci / yarn --frozen-lockfile so the install fails on a mismatch instead of silently upgrading dependencies.",
+      "followUp": ["Why should lock file conflicts never be resolved by hand?"],
+      "difficulty": 2
+    },
+    {
+      "id": "git-012",
+      "topic": "git-workflow",
+      "type": "open",
+      "question": "You disagree with an architectural decision made by your tech lead. What do you do?",
+      "explanation": "This tests maturity rather than technical knowledge. A good answer looks like this:\n\n1. First, understand: there may be context I do not have — history, plans, constraints\n2. State the objection concretely: not \"I don't like it\" but \"here is the risk, here is the scenario where it breaks, here is the cost\"\n3. Offer an alternative along with its own downsides — otherwise it is criticism, not a proposal\n4. Discuss it one to one or in a thread, not in a group call and not in a hostile tone\n5. If the decision stands — disagree and commit: implement it well and record the risk in writing so it can be revisited\n\nRed flags in an answer: \"I'd quietly do it my way\", \"not my problem\", or escalating over the lead's head as a first step.",
+      "followUp": ["Has this actually happened? How did it end and what would you do differently?"],
+      "difficulty": 2
+    }
+  ]
+}
