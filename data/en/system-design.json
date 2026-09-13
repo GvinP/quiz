@@ -1,0 +1,217 @@
+{
+  "topic": "system-design",
+  "title": "Mobile App System Design",
+  "version": 1,
+  "questions": [
+    {
+      "id": "sd-001",
+      "topic": "system-design",
+      "type": "single",
+      "question": "How does an answer to a system design question begin?",
+      "options": [
+        "By drawing the architecture diagram",
+        "By clarifying requirements: scenarios, scale, offline, devices, constraints",
+        "By choosing the stack and libraries",
+        "By describing the data model"
+      ],
+      "correct": [1],
+      "explanation": "Five to seven minutes on requirements is not lost time but the most valuable part. You need the functional scenarios and the non-functional constraints, and then you state the scope out loud: \"I'll focus on the feed and offline reading and leave authentication aside — does that work?\". Jumping straight to a diagram is the most common mistake.",
+      "followUp": ["Which non-functional requirements are specific to mobile?"],
+      "difficulty": 1
+    },
+    {
+      "id": "sd-002",
+      "topic": "system-design",
+      "type": "single",
+      "question": "Why should the UI not talk to the network directly?",
+      "options": [
+        "React's rules forbid it",
+        "A repository belongs in between, deciding where the data comes from — cache, local database or network",
+        "Network requests block rendering",
+        "Store rules require it"
+      ],
+      "correct": [1],
+      "explanation": "The layers: UI → state → domain → data (repository) → platform. The repository encapsulates the data-fetching policy, so offline, caching and swapping the source can be added without rewriting screens. This is the core of the architecture answer.",
+      "followUp": ["Where does business logic live in this scheme?"],
+      "difficulty": 2
+    },
+    {
+      "id": "sd-003",
+      "topic": "system-design",
+      "type": "single",
+      "question": "Why is cursor pagination better than offset in a live feed?",
+      "options": [
+        "A cursor is shorter and saves traffic",
+        "The feed changes while you scroll, and offset produces duplicated and skipped items",
+        "Offset is not supported by most APIs",
+        "A cursor lets you jump to an arbitrary page"
+      ],
+      "correct": [1],
+      "explanation": "While the user reads the first page, new items are added at the top — offset 20 now points somewhere else. A cursor is anchored to a position in the data rather than to a number. The cost: you cannot jump to an arbitrary page, but in an infinite feed you do not need to.",
+      "followUp": ["How do you deduplicate items when the feed refreshes?"],
+      "difficulty": 2
+    },
+    {
+      "id": "sd-004",
+      "topic": "system-design",
+      "type": "single",
+      "question": "What does stale-while-revalidate mean?",
+      "options": [
+        "Show a spinner until fresh data arrives",
+        "Show cached data immediately and refresh it in the background",
+        "Do not use the cache if it is older than a given time",
+        "Refresh the cache only on a user action"
+      ],
+      "correct": [1],
+      "explanation": "The screen paints instantly and freshness catches up afterwards. The key trade-off: the user briefly sees stale data. For a product description that is fine; for price and availability it is not, which is why data is separated by how stale it is allowed to be.",
+      "followUp": ["What three levels of cache exist and how do they differ?"],
+      "difficulty": 2
+    },
+    {
+      "id": "sd-005",
+      "topic": "system-design",
+      "type": "single",
+      "question": "A cached product price can go stale. What is the right approach?",
+      "options": [
+        "Cache everything the same way — it is simpler",
+        "Split data by freshness: descriptions and images for a long time, price and availability with a short TTL and a mandatory check before checkout",
+        "Cache nothing on the catalogue screen",
+        "Show the price only after the server confirms it"
+      ],
+      "correct": [1],
+      "explanation": "Showing the wrong price is worse than showing a spinner — but not so much worse that you give up instant catalogue rendering. The compromise: a different policy per field, with the final price always confirmed by the backend at checkout. This is the central trade-off of the case and it should be named out loud.",
+      "followUp": ["What do you show the user if the price changed at the checkout step?"],
+      "difficulty": 3
+    },
+    {
+      "id": "sd-006",
+      "topic": "system-design",
+      "type": "single",
+      "question": "Where should the source of truth for the cart live?",
+      "options": [
+        "Locally only — fast and works offline",
+        "On the server only — consistent",
+        "Hybrid: local state for instant response, the server as the source of truth, synchronisation in the background",
+        "In navigation URL parameters"
+      ],
+      "correct": [2],
+      "explanation": "Local only — the cart does not survive a reinstall and does not sync across devices. Server only — every tap on \"+\" waits for the network, which is unbearable in the metro. The hybrid gives responsiveness and consistency, but demands well-thought-out synchronisation and conflict resolution.",
+      "followUp": ["What do you do if the server returns a different quantity from the one shown locally?"],
+      "difficulty": 2
+    },
+    {
+      "id": "sd-007",
+      "topic": "system-design",
+      "type": "multi",
+      "question": "What does a correct optimistic update require?",
+      "options": [
+        "A snapshot of the previous state to roll back to",
+        "An idempotency key for the operation, so a retry does not double the result",
+        "An explicit message to the user on rollback, rather than a silent revert",
+        "Blocking the interface until the server responds"
+      ],
+      "correct": [0, 1, 2],
+      "explanation": "Blocking the interface contradicts the whole idea: an optimistic update exists for instant response. A separate subtlety is rapid taps on \"+\": you need a debounce that sends the final value, or a queue that collapses operations per product, otherwise a dozen requests go to the server.",
+      "followUp": ["The server response contradicts local state — who wins?"],
+      "difficulty": 2
+    },
+    {
+      "id": "sd-008",
+      "topic": "system-design",
+      "type": "single",
+      "question": "Why must checkout be idempotent?",
+      "options": [
+        "To speed up processing on the server",
+        "Because a client on a poor connection will repeat the request, and without an operation key a second order is created",
+        "To support offline mode",
+        "Payment providers require it"
+      ],
+      "correct": [1],
+      "explanation": "The client generates a key, and on a repeat with the same key the server returns the existing order. A duplicate order is the most expensive mistake in delivery: the user sees it, support sees it and finance sees it. This is the first thing to name in a checkout case.",
+      "followUp": ["What do you do if the response was lost but the order was created?"],
+      "difficulty": 2
+    },
+    {
+      "id": "sd-009",
+      "topic": "system-design",
+      "type": "single",
+      "question": "What is the right way to handle writes while offline?",
+      "options": [
+        "Show success and send later — it feels calmer for the user",
+        "A queue of operations with retries, idempotency keys and an explicit \"not sent\" status",
+        "Block every action until the network comes back",
+        "Keep changes in memory only until the connection returns"
+      ],
+      "correct": [1],
+      "explanation": "Faking success is unacceptable for operations involving money and commitments: placing an order offline should be honestly blocked with a clear message. For reversible actions (changing a quantity, favouriting) a queue with a visible status is the right answer. The user must always be able to see what is saved and what is not.",
+      "followUp": ["How do you resolve conflicts if the data also changed on the server?"],
+      "difficulty": 3
+    },
+    {
+      "id": "sd-010",
+      "topic": "system-design",
+      "type": "single",
+      "question": "Why model screen state explicitly rather than with a set of boolean flags?",
+      "options": [
+        "A lint rule requires it",
+        "The model idle | loading | success | error | empty makes invalid combinations unrepresentable",
+        "Flags take more memory",
+        "Flags cannot be persisted to storage"
+      ],
+      "correct": [1],
+      "explanation": "Four independent flags give 16 combinations, of which four or five are valid, and the rest have to be guarded by hand — hence screens showing a spinner and an error at the same time. An explicit model plus a discriminated union removes that class of bug at the type level.",
+      "followUp": ["When is it worth moving from a simple model to a full state machine?"],
+      "difficulty": 2
+    },
+    {
+      "id": "sd-011",
+      "topic": "system-design",
+      "type": "single",
+      "question": "On what principle do you split an app into modules?",
+      "options": [
+        "By file type: all components together, all hooks together, all services together",
+        "By feature, with a public module API and no imports into another module's internals",
+        "By platform: iOS separately, Android separately",
+        "By architectural layer, each layer its own package"
+      ],
+      "correct": [1],
+      "explanation": "Splitting by file type means every change to a feature touches five folders. The rule: if two screens always change together, they belong in one module. A module's public API stops neighbours latching onto its internals, so refactoring inside does not break anyone else's code.",
+      "followUp": ["How does this map onto a monorepo and ownership of shared packages?"],
+      "difficulty": 2
+    },
+    {
+      "id": "sd-012",
+      "topic": "system-design",
+      "type": "single",
+      "question": "How does a strong system design answer end?",
+      "options": [
+        "With a detailed diagram of every component",
+        "With trade-offs, risks and the metrics that will show the solution works",
+        "With a list of chosen libraries",
+        "With an estimate of how long it takes to build"
+      ],
+      "correct": [1],
+      "explanation": "What is assessed is not \"knows the right answer\" but \"understands what they are paying\". Name the alternative and explain why you did not take it; name the main risk and how you would spot it; name the success metric. That is what separates a senior answer from a list of technologies.",
+      "followUp": ["Which metrics would show that offline mode works as intended?"],
+      "difficulty": 2
+    },
+    {
+      "id": "sd-013",
+      "topic": "system-design",
+      "type": "open",
+      "question": "\"Design a catalogue with infinite scroll, search, filters and offline support.\" 15 minutes out loud.",
+      "explanation": "The frame of the answer:\n\n**Clarifications:** how many products, how often prices and availability change, is offline search needed, is the feed personalised.\n\n**Data:** a local database holds the last page and the categories; the repository serves stale-while-revalidate — cache immediately, refresh in the background.\n\n**Pagination:** cursor-based, loading more on onEndReached with a threshold around half a screen, deduplicated by id.\n\n**List:** FlashList with estimatedItemSize and getItemType; the cell in memo, a stable renderItem, cell state living in the data.\n\n**Images:** resized on the CDN to the size actually displayed, cached, with placeholders and explicit dimensions.\n\n**Search and filters:** debounce, cancel the previous request, filter state in the navigation parameters — so a deep link opens the same results.\n\n**The main trade-off:** freshness of price and availability against instant rendering — a different cache policy per field.\n\n**Metrics:** TTI, FPS while scrolling, the share of successful page loads, crash-free rate.",
+      "followUp": ["What changes if the feed is personalised and the cursor cannot be cached?"],
+      "difficulty": 3
+    },
+    {
+      "id": "sd-014",
+      "topic": "system-design",
+      "type": "open",
+      "question": "\"Design a support chat.\" 15 minutes out loud.",
+      "explanation": "The frame of the answer:\n\n**Transport:** WebSocket for an active chat, with reconnection on exponential backoff; the connection drops when the app goes to the background, so we fall back to push. Long polling as a degradation path.\n\n**Storage:** messages in SQLite. The server is the source of truth, but the screen reads from the database: instant open and offline access.\n\n**Sending:** a local id and a status of sending → sent → delivered → read → failed; the message appears immediately, the server returns the real id, and the two are reconciled. On failure, an error status and a retry button — nothing is lost.\n\n**Synchronisation:** on open, fetch messages after the last known id; history paginates upwards; deduplicate by local and server id, because a message can arrive both over the socket and in the send response.\n\n**List:** inverted, stable keys, no re-render of the whole history on every new message.\n\n**Risks:** duplicates, message ordering on a poor connection, database growth.",
+      "followUp": ["How do you guarantee message order when two are sent almost simultaneously?"],
+      "difficulty": 3
+    }
+  ]
+}

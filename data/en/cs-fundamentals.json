@@ -1,0 +1,320 @@
+{
+  "topic": "cs-fundamentals",
+  "title": "Computer Science Fundamentals",
+  "version": 1,
+  "questions": [
+    {
+      "id": "cs-001",
+      "topic": "cs-fundamentals",
+      "type": "single",
+      "question": "What happens when you enter a URL in a browser — in the right order?",
+      "options": [
+        "TCP connection → DNS → HTTP request → TLS → render",
+        "DNS → TCP connection → TLS handshake → HTTP request → response → parsing and render",
+        "HTTP request → DNS → TLS → TCP → render",
+        "DNS → HTTP request → TCP → render"
+      ],
+      "correct": [1],
+      "explanation": "A classic question testing the overall picture of networking. Every stage is a place where something can be slow: DNS resolution, establishing the connection, the TLS handshake, TTFB, loading resources, rendering. Being able to name the stages helps you look for the cause of a slow load systematically.",
+      "followUp": ["Which stage does keep-alive help with, and which does a CDN help with?"],
+      "difficulty": 1
+    },
+    {
+      "id": "cs-002",
+      "topic": "cs-fundamentals",
+      "type": "single",
+      "question": "How does TCP differ from UDP?",
+      "options": [
+        "TCP is faster, UDP is more reliable",
+        "TCP guarantees delivery and ordering at the cost of overhead; UDP guarantees nothing but adds no delay for acknowledgements",
+        "TCP only works with HTTP",
+        "UDP encrypts data, TCP does not"
+      ],
+      "correct": [1],
+      "explanation": "TCP means a connection, acknowledgements, retransmission and congestion control. UDP is fire-and-forget, hence its use in video calls, games and DNS, where a late packet is more useless than a lost one. HTTP/3 is built on QUIC over UDP precisely to get rid of head-of-line blocking.",
+      "followUp": ["Why is packet loss better than delay in a video call?"],
+      "difficulty": 2
+    },
+    {
+      "id": "cs-003",
+      "topic": "cs-fundamentals",
+      "type": "single",
+      "question": "What do the codes 401 and 403 mean?",
+      "options": [
+        "401 means access is permanently denied, 403 means authentication is required",
+        "401 means not authenticated (who are you?), 403 means authenticated but not permitted (you may not)",
+        "They are synonyms",
+        "401 is a server error, 403 is a client error"
+      ],
+      "correct": [1],
+      "explanation": "401 means \"present or refresh your credentials\" — it is what triggers a token refresh on the client. 403 means the identity is known but the rights are not there, and repeating the request is pointless. Confusing the two leads to infinite token-refresh loops.",
+      "followUp": ["What do 409, 422 and 429 mean?"],
+      "difficulty": 1
+    },
+    {
+      "id": "cs-004",
+      "topic": "cs-fundamentals",
+      "type": "single",
+      "question": "What does it mean for an HTTP method to be idempotent?",
+      "options": [
+        "The method always returns the same response",
+        "Repeating the request changes system state no further than the first one did: GET, PUT and DELETE are idempotent, POST is not",
+        "The method has no side effects at all",
+        "The method can be cached"
+      ],
+      "correct": [1],
+      "explanation": "The key distinction: an idempotent method can safely be repeated (which matters on a poor connection), while a safe one (GET, HEAD) does not change state at all. That is exactly why POST operations like placing an order need an idempotency key — otherwise a retry creates a duplicate.",
+      "followUp": ["How do you make a POST idempotent?"],
+      "difficulty": 2
+    },
+    {
+      "id": "cs-005",
+      "topic": "cs-fundamentals",
+      "type": "single",
+      "question": "What does TLS give you?",
+      "options": [
+        "Traffic encryption only",
+        "Encryption, data integrity and authentication of the server through a certificate chain",
+        "Data compression and faster transfer",
+        "Protection from XSS and CSRF"
+      ],
+      "correct": [1],
+      "explanation": "Authentication often gets left out of the answer, and it is the crucial part: without verifying the certificate you could build an encrypted channel with an attacker. SSL pinning in a mobile app narrows trust to a specific certificate — and requires a rotation plan, or the app stops working when the certificate changes.",
+      "followUp": ["Why is SSL pinning dangerous without a certificate rotation plan?"],
+      "difficulty": 2
+    },
+    {
+      "id": "cs-006",
+      "topic": "cs-fundamentals",
+      "type": "single",
+      "question": "What is ACID in the context of a database?",
+      "options": [
+        "Atomicity, Consistency, Isolation, Durability — the properties of a transaction",
+        "A table indexing method",
+        "A replication scheme between nodes",
+        "A level of data normalisation"
+      ],
+      "correct": [0],
+      "explanation": "Atomicity — a transaction happens in full or not at all; consistency — the data does not violate its invariants; isolation — concurrent transactions do not interfere; durability — what was committed survives a crash. For a mobile developer this matters when working with local SQLite and when reasoning about the guarantees the backend offers.",
+      "followUp": ["What are isolation levels and which anomalies do they allow?"],
+      "difficulty": 2
+    },
+    {
+      "id": "cs-007",
+      "topic": "cs-fundamentals",
+      "type": "single",
+      "question": "What is a database index and what does it cost?",
+      "options": [
+        "A copy of the table for fast reads, free in terms of resources",
+        "A structure (usually a B-tree) that speeds up lookups at the cost of slower writes and extra space",
+        "A cache of recent queries",
+        "A data integrity constraint"
+      ],
+      "correct": [1],
+      "explanation": "Every index has to be updated on insert and update, so \"index everything\" is a poor strategy. The classic problem worth knowing by name: N+1 queries — when instead of one query with a join you run one query for the list and another for every item in it.",
+      "followUp": ["How do you spot an N+1 in logs or traces?"],
+      "difficulty": 2
+    },
+    {
+      "id": "cs-008",
+      "topic": "cs-fundamentals",
+      "type": "single",
+      "question": "When is a relational database preferable to NoSQL?",
+      "options": [
+        "Always — NoSQL is a passing fashion",
+        "When the data is related, you need transactions and flexible queries; NoSQL suits simple access patterns and horizontal scale",
+        "When there is little data",
+        "When you need high read speed"
+      ],
+      "correct": [1],
+      "explanation": "The question is not better or worse but the access pattern. A strong answer names the trade-off: relational gives query flexibility and integrity, document storage gives easy scaling and a schema shaped for a specific query, at the price of duplicated data and consistency maintained by hand.",
+      "followUp": ["What is eventual consistency and where is it acceptable?"],
+      "difficulty": 2
+    },
+    {
+      "id": "cs-009",
+      "topic": "cs-fundamentals",
+      "type": "single",
+      "question": "What is a race condition and how do you deal with it?",
+      "options": [
+        "A network error on parallel requests; solved with retries",
+        "The result depends on the order in which parallel operations complete; solved with synchronisation, atomicity, or removing the shared state",
+        "A stack overflow during recursion",
+        "A memory leak from unclosed subscriptions"
+      ],
+      "correct": [1],
+      "explanation": "JS has no threads, but it does have races: two asynchronous requests returning in an unexpected order, a double tap on a button, parallel writes to the same storage. Hence AbortController, freshness flags in cleanup, disabling a button for the duration of a request, and idempotency on the server.",
+      "followUp": ["What is a deadlock and why does it barely happen in JS?"],
+      "difficulty": 2
+    },
+    {
+      "id": "cs-010",
+      "topic": "cs-fundamentals",
+      "type": "single",
+      "question": "How does a process differ from a thread?",
+      "options": [
+        "They are synonyms",
+        "A process has its own isolated address space; threads within a process share memory",
+        "A thread is heavier than a process",
+        "There can only be one process per application"
+      ],
+      "correct": [1],
+      "explanation": "Hence the trade-off: threads are cheaper and exchange data faster, but one error takes the whole process down and you get races over shared memory. Processes are isolated and more robust, but communication between them is more expensive. In Node this is worker_threads versus cluster/child_process.",
+      "followUp": ["Why does the JS thread in React Native block the entire app?"],
+      "difficulty": 2
+    },
+    {
+      "id": "cs-011",
+      "topic": "cs-fundamentals",
+      "type": "multi",
+      "question": "What do the SOLID principles mean in practice?",
+      "options": [
+        "Single Responsibility — a module has one reason to change",
+        "Open/Closed — extend behaviour without modifying existing code",
+        "Dependency Inversion — depend on abstractions rather than concrete implementations",
+        "All five principles are mandatory in every component"
+      ],
+      "correct": [0, 1, 2],
+      "explanation": "SOLID is a set of heuristics, not law: applying it blindly to every React component produces sprawling abstraction where a function would have done. The most practical on the front end are Single Responsibility (a component does one thing) and Dependency Inversion (a service behind an interface so it can be swapped in tests).",
+      "followUp": ["What does Dependency Inversion look like in React through Context?"],
+      "difficulty": 2
+    },
+    {
+      "id": "cs-012",
+      "topic": "cs-fundamentals",
+      "type": "single",
+      "question": "Which patterns actually show up most often in front-end code?",
+      "options": [
+        "Singleton, Observer, Factory, Strategy, Adapter",
+        "Visitor, Flyweight, Interpreter",
+        "Patterns are not used on the front end",
+        "Only MVC"
+      ],
+      "correct": [0],
+      "explanation": "Observer — all reactivity and store subscriptions; Singleton — the API client, the logger, storage; Factory — creating services from configuration; Strategy — swapping an implementation (a push provider per store, for example); Adapter — a wrapper over someone else's SDK. Recognising them in your own code is more useful than memorising the catalogue.",
+      "followUp": ["Which pattern have you applied deliberately, and why?"],
+      "difficulty": 1
+    },
+    {
+      "id": "cs-013",
+      "topic": "cs-fundamentals",
+      "type": "single",
+      "question": "What is the point of the testing pyramid?",
+      "options": [
+        "The higher the level, the more important the test",
+        "Many fast cheap unit tests, fewer integration tests, few slow e2e tests",
+        "Every level should cover 100% of the code",
+        "E2E tests replace all the others"
+      ],
+      "correct": [1],
+      "explanation": "E2E gives the most confidence but is slow, brittle and expensive to maintain. Unit tests are fast and precise but miss integration problems. The practical rule: mock the boundaries (network, time, native modules), not your own logic — otherwise the test checks the mocks rather than the code.",
+      "followUp": ["Why is 100% coverage a bad goal?"],
+      "difficulty": 1
+    },
+    {
+      "id": "cs-014",
+      "topic": "cs-fundamentals",
+      "type": "single",
+      "question": "What is UTF-8, and why is '🙂'.length === 2?",
+      "options": [
+        "A bug in the JavaScript engine",
+        "JS strings are sequences of UTF-16 code units; characters outside the BMP take two units (a surrogate pair)",
+        "Emoji always count as two characters in every language",
+        "The length depends on the font"
+      ],
+      "correct": [1],
+      "explanation": "UTF-8 is variable length, from 1 to 4 bytes, and is used for storage and transfer. Inside JS, strings are UTF-16, hence surrogate pairs. The practical consequence: truncating a string by index can cut a character in half; iterate correctly with for...of or Array.from, which walk by code point.",
+      "followUp": ["How do you correctly truncate a string with emoji to N characters?"],
+      "difficulty": 3
+    },
+    {
+      "id": "cs-015",
+      "topic": "cs-fundamentals",
+      "type": "single",
+      "question": "How does hashing differ from encryption?",
+      "options": [
+        "They are the same thing with different algorithms",
+        "A hash is one-way and irreversible; encryption is reversible given the key",
+        "Hashing is only used for passwords",
+        "Encryption is faster than hashing"
+      ],
+      "correct": [1],
+      "explanation": "Passwords are stored hashed with a salt and a deliberately slow algorithm (bcrypt, argon2) — the slowness is a feature, not a flaw. Fast hashes are used for integrity checking. Encryption is for when the data has to be read back later. Confusing the two is a common interview mistake.",
+      "followUp": ["Why do you need a salt, and why must MD5 not be used for passwords?"],
+      "difficulty": 2
+    },
+    {
+      "id": "cs-016",
+      "topic": "cs-fundamentals",
+      "type": "single",
+      "question": "What are big-endian and little-endian, and where do you meet them?",
+      "options": [
+        "Ways of sorting arrays",
+        "The byte order within a multi-byte number; it matters with binary protocols and files",
+        "Data compression modes",
+        "Types of network connection"
+      ],
+      "correct": [1],
+      "explanation": "Network byte order is big-endian, while most processors are little-endian. It rarely comes up on the front end, but it surfaces when working with ArrayBuffer/DataView, parsing binary formats and writing native modules. Knowing it exists and where it shows up is enough.",
+      "followUp": ["Where might a mobile app need a DataView?"],
+      "difficulty": 3
+    },
+    {
+      "id": "cs-017",
+      "topic": "cs-fundamentals",
+      "type": "single",
+      "question": "What is the CPU cache and why does it affect the performance of your code?",
+      "options": [
+        "It does not, that is the operating system's business",
+        "Memory access is far slower than cache access, so walking data sequentially is faster than jumping around",
+        "The CPU cache only matters in C and C++",
+        "It only affects multithreaded programs"
+      ],
+      "correct": [1],
+      "explanation": "Hence a practical consequence even in high-level languages: walking an array sequentially is faster than hopping through a linked list or objects scattered across memory. This is one reason typed arrays and flat structures beat nested objects.",
+      "followUp": ["Why can an array of objects be slower than an object of arrays?"],
+      "difficulty": 3
+    },
+    {
+      "id": "cs-018",
+      "topic": "cs-fundamentals",
+      "type": "single",
+      "question": "What is the CAP theorem?",
+      "options": [
+        "A system cannot simultaneously guarantee consistency, availability and partition tolerance",
+        "A rule for choosing a sorting algorithm",
+        "A method for estimating algorithmic complexity",
+        "A caching scheme for distributed systems"
+      ],
+      "correct": [0],
+      "explanation": "The practical phrasing: network partitions are inevitable, so the real choice is between consistency and availability during a partition. For a mobile app this is close to home: being offline is a partition, and you have to decide whether to block the operation (consistency) or accept it locally and resolve the conflict later (availability).",
+      "followUp": ["What does that choice look like in the cart and at checkout?"],
+      "difficulty": 3
+    },
+    {
+      "id": "cs-019",
+      "topic": "cs-fundamentals",
+      "type": "single",
+      "question": "What is generational garbage collection?",
+      "options": [
+        "Collection on a schedule, every N seconds",
+        "Splitting objects into young and old: the young are collected often and quickly, the old rarely",
+        "Collecting only objects with no references",
+        "Manual memory release by the developer"
+      ],
+      "correct": [1],
+      "explanation": "It is based on the observation that most objects die young. V8 splits the heap into new space (frequent fast passes) and old space (rare expensive ones). The practical consequence: creating lots of short-lived objects in a hot loop — in a list's renderItem, for instance — triggers frequent collections and janky frames.",
+      "followUp": ["Why does recreating objects in a list render hurt FPS?"],
+      "difficulty": 3
+    },
+    {
+      "id": "cs-020",
+      "topic": "cs-fundamentals",
+      "type": "open",
+      "question": "Explain what happens when the \"Place order\" button is tapped — from the tap to the database write. Answer out loud.",
+      "explanation": "A test of end-to-end understanding of the stack. The frame:\n\n1. **Client:** handling the tap on the UI thread, disabling the button against a double tap, generating an idempotency key, assembling the payload\n2. **Network:** DNS (usually from cache), TCP/TLS or reusing a connection, the HTTP request, authorisation headers\n3. **Server:** load balancer, authentication, validation, checking prices and availability, a transaction reserving stock and creating the order, publishing an event\n4. **Response:** status code, body with the order; the client updates state and clears the optimistic status\n5. **Edge cases:** timeout and retry with the same key, a price discrepancy, no network, the app killed at the moment of the response\n\nA strong answer always reaches point 5 — that is where you can tell who has worked with real production.",
+      "followUp": ["What happens if the app is killed immediately after the request is sent?"],
+      "difficulty": 3
+    }
+  ]
+}

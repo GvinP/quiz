@@ -1,0 +1,190 @@
+{
+  "topic": "behavioral",
+  "title": "Behavioural Round",
+  "version": 1,
+  "questions": [
+    {
+      "id": "beh-001",
+      "topic": "behavioral",
+      "type": "single",
+      "question": "Which structure works best for answering a behavioural question?",
+      "options": [
+        "Describe the technical side of the problem in detail",
+        "Situation → task → what I personally did → result, ideally measurable",
+        "Talk about the team and the project as a whole",
+        "Start with the conclusions and skip the details"
+      ],
+      "correct": [1],
+      "explanation": "This is STAR. The main trap is saying \"we did\": the interviewer is assessing your contribution, not the team's. The second common failure is no result: a story without an outcome sounds like process without purpose. The numbers do not have to be exact — an order of magnitude is enough.",
+      "followUp": ["How many such stories are worth preparing in advance?"],
+      "difficulty": 1
+    },
+    {
+      "id": "beh-002",
+      "topic": "behavioral",
+      "type": "single",
+      "question": "Why prepare six to eight stories in advance?",
+      "options": [
+        "To memorise them and recite them word for word",
+        "Because most behavioural questions are different angles on the same handful of stories",
+        "To speak longer and fill the time",
+        "The interview format requires it"
+      ],
+      "correct": [1],
+      "explanation": "\"A difficult problem\", \"a conflict\", \"a mistake\", \"impact on the team\", \"working under uncertainty\" are often the same material with a different emphasis. A prepared set removes the main risk — reaching for a story on the spot and producing a weak example because the strong one did not come to mind.",
+      "followUp": ["Which of your stories cover several questions at once?"],
+      "difficulty": 1
+    },
+    {
+      "id": "beh-003",
+      "topic": "behavioral",
+      "type": "single",
+      "question": "\"Tell me about your most serious professional mistake.\" What do they want to hear?",
+      "options": [
+        "That there were no serious mistakes",
+        "A real mistake, owning responsibility, and what changed in how you work afterwards",
+        "A colleague's mistake that you had to fix",
+        "A minor mistake, so as not to look bad"
+      ],
+      "correct": [1],
+      "explanation": "This tests the capacity for reflection. \"No mistakes\" reads as either a lack of self-criticism or a lack of serious work. A deliberately trivial example looks like evasion. A strong answer: a real mistake with consequences, no shifting of blame, and a specific systemic change — a test, an alert, a process — that closed off that class of mistake.",
+      "followUp": ["How did you find out about the mistake and how quickly did you localise it?"],
+      "difficulty": 2
+    },
+    {
+      "id": "beh-004",
+      "topic": "behavioral",
+      "type": "single",
+      "question": "\"Why are you leaving your current job?\" How do you answer?",
+      "options": [
+        "Go into detail about the company's and management's problems",
+        "Neutral about the past, specific about what you want next",
+        "Say everything is fine, you are just curious about the market",
+        "Point to salary alone"
+      ],
+      "correct": [1],
+      "explanation": "Criticising a previous employer nearly always counts against the candidate: the interviewer is imagining how you will talk about them. The formula is brief and neutral on the reason, then substantive on what you are looking for: scope, technology, role, product. Money as the only motive sounds weak, but acknowledging it as part of the picture is fine.",
+      "followUp": ["What specifically are you looking for in your next place?"],
+      "difficulty": 1
+    },
+    {
+      "id": "beh-005",
+      "topic": "behavioral",
+      "type": "single",
+      "question": "\"Tell me about a conflict with a colleague.\" What does a strong answer show?",
+      "options": [
+        "That you turned out to be right and the colleague wrong",
+        "That you separate the position from the person, look for the root of the disagreement, and carry it through to a resolution",
+        "That you never have conflicts",
+        "That you escalate such situations to your manager straight away"
+      ],
+      "correct": [1],
+      "explanation": "What is assessed is not the absence of conflict but how you move through it. A strong answer shows an attempt to understand the other person's logic, moving the argument onto concrete ground (data, scenarios, the cost of a decision), and an outcome — including cases where you turned out to be wrong. \"I never have conflicts\" reads as either avoidance or having no position of your own.",
+      "followUp": ["Was there a time you were wrong and changed your mind?"],
+      "difficulty": 2
+    },
+    {
+      "id": "beh-006",
+      "topic": "behavioral",
+      "type": "single",
+      "question": "\"What do you do when the deadline is burning and quality has to be cut?\"",
+      "options": [
+        "Work overtime and get everything done",
+        "Make the trade-off explicit: show the scope options and the risks, and let whoever owns the deadline decide",
+        "Ship as is and say nothing about the risks",
+        "Refuse to ship until it is fully ready"
+      ],
+      "correct": [1],
+      "explanation": "This tests whether you can work with constraints without going to extremes. A strong answer separates what can be simplified (scope, polish, coverage of secondary cases) from what cannot (security, data loss, payments) and always mentions recording the technical debt. Silent heroics with overtime is a red flag for an interviewer.",
+      "followUp": ["Which trade-off would you consider unacceptable?"],
+      "difficulty": 2
+    },
+    {
+      "id": "beh-007",
+      "topic": "behavioral",
+      "type": "single",
+      "question": "What questions are worth asking the interviewer at the end?",
+      "options": [
+        "None — it drags the meeting out",
+        "Specific ones: how the release process works, what hurts most right now, what the first month looks like",
+        "Salary and holidays first",
+        "Generic ones: what is your culture like, is the team friendly"
+      ],
+      "correct": [1],
+      "explanation": "The questions are part of the assessment: they show what you actually care about. Good questions are concrete and useful to you: technical debt, testing, who makes product decisions, what onboarding looks like. \"No questions\" reads as indifference. Money is discussed, but not as the first item in a technical interview.",
+      "followUp": ["Which answer to your question would be a stop signal for you?"],
+      "difficulty": 1
+    },
+    {
+      "id": "beh-008",
+      "topic": "behavioral",
+      "type": "single",
+      "question": "A question you do not know the answer to. How do you react?",
+      "options": [
+        "Guess in a confident tone — you might land it",
+        "Say honestly that you have not run into it, and reason out loud about how you would approach it",
+        "Steer the conversation to a familiar topic",
+        "Say it does not matter in practice"
+      ],
+      "correct": [1],
+      "explanation": "Confident invention is the worst option: the interviewer almost always spots it, and from then on doubts your other answers too. An honest \"I don't know, but here is how I'd reason about it\" shows both the limits of your knowledge and how you think. It helps to add where you would go looking for the answer.",
+      "followUp": ["How do you show your thinking without knowing the specific fact?"],
+      "difficulty": 1
+    },
+    {
+      "id": "beh-009",
+      "topic": "behavioral",
+      "type": "single",
+      "question": "How do you answer a question about salary expectations?",
+      "options": [
+        "Name the minimum you would accept",
+        "Name a range grounded in the market, and ask about the whole compensation package",
+        "Say \"whatever you offer\"",
+        "Name the highest number you can think of"
+      ],
+      "correct": [1],
+      "explanation": "A minimum becomes the ceiling of the offer. \"Whatever you offer\" hands over the decision and usually produces an offer near the bottom of their range. A range with a rationale leaves room to negotiate, and the question of what the package consists of (bonuses, reviews, contract form, currency) matters more than a single number — especially when working remotely from another country.",
+      "followUp": ["What matters more than the number in your particular situation?"],
+      "difficulty": 2
+    },
+    {
+      "id": "beh-010",
+      "topic": "behavioral",
+      "type": "open",
+      "question": "Tell me about yourself in two to three minutes. Say it out loud and time yourself.",
+      "explanation": "The first question of almost any interview, and the one most often fumbled — by retelling the CV year by year.\n\nA structure that works:\n1. **Who you are now** — role, stack, product and its scale (one sentence)\n2. **What you have been doing lately** — two or three significant things, ideally with an outcome\n3. **What you can do beyond writing features** — infrastructure, tests, releases, working with the team\n4. **Why you are here** — the link to this particular role\n\nRules: two to three minutes, no more; no chronology starting from your first job; specifics instead of \"I worked on mobile apps\". Say it out loud at least five times — it reads differently on paper than it sounds in speech.",
+      "followUp": ["Which three things from your experience are most convincing for this specific role?"],
+      "difficulty": 2
+    },
+    {
+      "id": "beh-011",
+      "topic": "behavioral",
+      "type": "open",
+      "question": "Tell me about a piece of work you are proud of. Say it out loud, using STAR.",
+      "explanation": "What makes a strong story:\n\n1. **The scale is clear without explanation** — how many users, what a mistake would cost\n2. **Your contribution is separated from the team's** — \"I proposed\", \"I built\", \"I got agreement on\"\n3. **There was a difficulty** — otherwise there is nothing to be proud of; name what was not obvious\n4. **There is a result** — a metric, time saved, a class of problems closed\n5. **There is reflection** — what you would do differently\n\nCandidates most often fail on points 2 and 4. Prepare the story so that \"what exactly did you do?\" and \"what actually changed?\" do not have to be answered on the spot.",
+      "followUp": [
+        "What was the hardest part and why?",
+        "How would you do it today?"
+      ],
+      "difficulty": 2
+    },
+    {
+      "id": "beh-012",
+      "topic": "behavioral",
+      "type": "open",
+      "question": "How will you explain your situation with remote work and contract arrangements? Say it out loud.",
+      "explanation": "The question about location and contract comes up in the very first HR screen, and improvising here is expensive — a hesitation reads as a problem even when there is none.\n\nWhat the prepared answer should contain:\n1. **The fact, calmly and without apology** — where you are and since when\n2. **How it already works** — how long you have worked this way, how the time zones overlap, how communication is handled\n3. **What you are open to discussing** — the contract arrangements that work for you\n4. **Back to business** — a transition back to the work and the experience\n\nThe crucial part is tone. The same fact stated confidently and stated apologetically read completely differently. Say it out loud several times until the wording feels natural.",
+      "followUp": ["Which overlapping hours are you genuinely prepared to keep?"],
+      "difficulty": 3
+    },
+    {
+      "id": "beh-013",
+      "topic": "behavioral",
+      "type": "open",
+      "question": "\"Where do you see yourself in three years?\" Answer out loud.",
+      "explanation": "The question looks like a formality, but it checks two things: whether you have a direction, and whether it matches what the company can offer.\n\nWhat works: a specific direction of growth (deep platform expertise, architecture, tech lead) plus a link to what you want to be doing right now. It helps to show that you understand the difference between growing deeper and growing into management, and that you made a deliberate choice.\n\nWhat does not work: \"I haven't thought about it\", \"I want to be a team lead\" with no explanation of why, and promises that clearly do not match the role.",
+      "followUp": ["What do you need from an employer to get there?"],
+      "difficulty": 2
+    }
+  ]
+}

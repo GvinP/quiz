@@ -47,6 +47,36 @@
       "title": "Node.js",
       "group": "Backend",
       "order": 8
+    },
+    {
+      "topic": "cs-fundamentals",
+      "title": "Computer Science Fundamentals",
+      "group": "General",
+      "order": 9
+    },
+    {
+      "topic": "algorithms",
+      "title": "Algorithms and Live Coding",
+      "group": "General",
+      "order": 10
+    },
+    {
+      "topic": "system-design",
+      "title": "Mobile App System Design",
+      "group": "General",
+      "order": 11
+    },
+    {
+      "topic": "git-workflow",
+      "title": "Git and Development Process",
+      "group": "General",
+      "order": 12
+    },
+    {
+      "topic": "behavioral",
+      "title": "Behavioural Round",
+      "group": "General",
+      "order": 13
     }
   ]
 }
