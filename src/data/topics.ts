@@ -1,6 +1,8 @@
 import type { TopicFile } from './types.ts';
+import type { Language } from '../i18n/language.ts';
+import { LANGUAGES, isLanguage } from '../i18n/language.ts';
 
-/** Запись реестра data/topics.json — только оформление списка, не источник тем. */
+/** Запись реестра data/<язык>/topics.json — только оформление списка. */
 interface RegistryEntry {
   topic: string;
   title: string;
@@ -11,33 +13,39 @@ interface RegistryEntry {
 const REGISTRY_FILE = 'topics.json';
 
 /**
- * Темы находятся глобом по /data, а не по реестру: Vite раскрывает его на
- * сборке, поэтому новый файл подхватывается без единой правки кода.
+ * Темы находятся глобом по data/<язык>, а не по реестру: Vite раскрывает его
+ * на сборке, поэтому новый файл подхватывается без единой правки кода.
  * eager: false — каждая тема уезжает в свой чанк и грузится по требованию.
  */
-const loaders = import.meta.glob<TopicFile>('../../data/*.json', {
+const loaders = import.meta.glob<TopicFile>('../../data/*/*.json', {
   import: 'default',
 });
 
 /**
  * Реестр необязателен и нужен только чтобы задать порядок и группировку:
- * на тринадцати темах плоский алфавитный список читается плохо. Тема, которой
- * в реестре нет, всё равно попадёт в приложение — просто в конец.
+ * на десятке тем плоский алфавитный список читается плохо. Тема, которой в
+ * реестре нет, всё равно попадёт в приложение — просто в конец.
  */
-const registries = import.meta.glob<{ topics: RegistryEntry[] }>('../../data/topics.json', {
+const registries = import.meta.glob<{ topics: RegistryEntry[] }>('../../data/*/topics.json', {
   eager: true,
   import: 'default',
 });
 
-const registry = new Map(
-  Object.values(registries)
-    .flatMap((value) => value?.topics ?? [])
-    .map((entry) => [entry.topic, entry]),
-);
+function partsOf(path: string): { language: string; file: string } {
+  const segments = path.split('/');
+  return { language: segments[segments.length - 2], file: segments[segments.length - 1] };
+}
+
+const registryFor = (language: Language) => {
+  const entry = Object.entries(registries).find(
+    ([path]) => partsOf(path).language === language,
+  );
+  return new Map((entry?.[1]?.topics ?? []).map((item) => [item.topic, item]));
+};
 
 export interface TopicRef {
   topic: string;
-  file: string;
+  language: Language;
   /** Название из реестра — известно до загрузки самой темы. */
   title?: string;
   group?: string;
@@ -45,23 +53,38 @@ export interface TopicRef {
   load: () => Promise<TopicFile>;
 }
 
-export const topicRefs: TopicRef[] = Object.entries(loaders)
-  .map(([path, load]) => ({ file: path.slice(path.lastIndexOf('/') + 1), load }))
-  .filter(({ file }) => file !== REGISTRY_FILE)
-  .map(({ file, load }) => {
-    const topic = file.replace(/\.json$/, '');
-    const entry = registry.get(topic);
-    return {
-      topic,
-      file,
-      title: entry?.title,
-      group: entry?.group,
-      order: entry?.order ?? Number.MAX_SAFE_INTEGER,
-      load,
-    };
-  })
-  .sort((a, b) => a.order - b.order || a.file.localeCompare(b.file));
+const byLanguage = new Map<Language, TopicRef[]>();
 
-export function loadAllTopics(): Promise<TopicFile[]> {
-  return Promise.all(topicRefs.map((ref) => ref.load()));
+for (const language of LANGUAGES) {
+  const registry = registryFor(language);
+
+  const refs = Object.entries(loaders)
+    .map(([path, load]) => ({ ...partsOf(path), load }))
+    .filter((item) => item.language === language && item.file !== REGISTRY_FILE)
+    .map(({ file, load }) => {
+      const topic = file.replace(/\.json$/, '');
+      const entry = registry.get(topic);
+      return {
+        topic,
+        language,
+        title: entry?.title,
+        group: entry?.group,
+        order: entry?.order ?? Number.MAX_SAFE_INTEGER,
+        load,
+      };
+    })
+    .sort((a, b) => a.order - b.order || a.topic.localeCompare(b.topic));
+
+  byLanguage.set(language, refs);
 }
+
+export const topicRefsFor = (language: Language): TopicRef[] => byLanguage.get(language) ?? [];
+
+export const loadTopics = (language: Language): Promise<TopicFile[]> =>
+  Promise.all(topicRefsFor(language).map((ref) => ref.load()));
+
+/** Языки, на которых реально есть хоть одна тема — только их и предлагаем. */
+export const availableLanguages = (): Language[] =>
+  LANGUAGES.filter((language) => topicRefsFor(language).length > 0);
+
+export { isLanguage };

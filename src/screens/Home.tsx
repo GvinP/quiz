@@ -1,10 +1,12 @@
 import type { Question } from '../data/types.ts';
 import type { Progress } from '../progress/types.ts';
+import type { Language } from '../i18n/language.ts';
+import type { ResolvedSession } from '../session/pending.ts';
 import { reviewQueue, weakQueue, nextDueDay } from '../progress/selectors.ts';
 import { dayNumber } from '../progress/day.ts';
 import { WEAK_RATIO } from '../progress/leitner.ts';
-import { plural, questionsWord, whenNext } from '../format.ts';
-import type { ResolvedSession } from '../session/pending.ts';
+import { useStrings } from '../i18n/context.tsx';
+import { LanguageSwitch } from '../components/LanguageSwitch.tsx';
 
 interface HomeProps {
   /** Известно из реестра сразу, до загрузки самих тем. */
@@ -13,6 +15,9 @@ interface HomeProps {
   loading: boolean;
   progress: Progress;
   pending: ResolvedSession | null;
+  languages: Language[];
+  language: Language;
+  onLanguage: (language: Language) => void;
   onResume: () => void;
   onQuiz: () => void;
   onReview: (questions: Question[]) => void;
@@ -43,11 +48,15 @@ export function Home({
   loading,
   progress,
   pending,
+  languages,
+  language,
+  onLanguage,
   onResume,
   onQuiz,
   onReview,
   onWeak,
 }: HomeProps) {
+  const t = useStrings();
   const today = dayNumber();
   const due = reviewQueue(questions, progress, today);
   const weak = weakQueue(questions, progress);
@@ -56,47 +65,67 @@ export function Home({
     0,
   );
 
+  function whenNext(): string {
+    const day = nextDueDay(questions, progress, today);
+    if (day === null) return t.nextNever;
+    const days = day - today;
+    if (days <= 0) return t.nextNow;
+    if (days === 1) return t.nextTomorrow;
+    return t.nextInDays(days);
+  }
+
   return (
     <div className="screen">
       <div className="content">
-        <h1>Квиз по React Native</h1>
+        <header className="title-row">
+          <h1>{t.appTitle}</h1>
+          <LanguageSwitch languages={languages} current={language} onChange={onLanguage} />
+        </header>
+
         <p className="hint">
-          {topicCount} {plural(topicCount, 'тема', 'темы', 'тем')}
-          {!loading && `, ${questions.length} ${questionsWord(questions.length)}`}
-          {answered > 0 && ` · отвечено ${answered}`}
+          {t.topicsCount(topicCount)}
+          {!loading && `, ${t.questionsCount(questions.length)}`}
+          {answered > 0 && ` · ${t.answeredCount(answered)}`}
         </p>
 
         <ul className="cards">
           {pending && (
             <Mode
-              title="Продолжить"
-              note={`${pending.title} · вопрос ${pending.answers.length + 1} из ${pending.questions.length}`}
+              title={t.resume}
+              note={t.resumeNote(
+                pending.title,
+                pending.answers.length + 1,
+                pending.questions.length,
+              )}
               onClick={onResume}
             />
           )}
-          <Mode title="Квиз" note="Вопросы одной темы подряд" onClick={onQuiz} />
+
+          <Mode title={t.quiz} note={t.quizNote} onClick={onQuiz} />
+
           <Mode
-            title="Повторение"
+            title={t.review}
             note={
               loading
-                ? 'Вперемешку из всех тем'
+                ? t.reviewNote
                 : due.length > 0
-                  ? `Вперемешку из всех тем · пора повторить: ${due.length} ${questionsWord(due.length)}`
-                  : `Сейчас нечего повторять. ${whenNext(nextDueDay(questions, progress, today), today)}`
+                  ? t.reviewDue(due.length)
+                  : t.reviewEmpty(whenNext())
             }
             disabled={loading || due.length === 0}
             onClick={() => onReview(due)}
           />
+
           <Mode
-            title="Работа над ошибками"
+            title={t.weak}
             note={
               loading
-                ? 'Вопросы, на которых стабильно ошибаешься'
+                ? t.weakNote
                 : weak.length > 0
-                  ? `Доля верных ниже ${Math.round(WEAK_RATIO * 100)}% · ${weak.length} ${questionsWord(weak.length)}`
+                  ? t.weakCount(weak.length, Math.round(WEAK_RATIO * 100))
                   : answered === 0
-                    ? 'Появится, когда будет на чём ошибаться.'
-                    : 'Пусто — устойчивых ошибок пока нет.'
+                    ? t.weakNothingYet
+                    : t.weakEmpty
             }
             disabled={loading || weak.length === 0}
             onClick={() => onWeak(weak)}

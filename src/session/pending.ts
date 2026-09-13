@@ -17,6 +17,9 @@ export interface PendingSession {
 
 export const PENDING_KEY = 'session_current';
 
+/** Ключ сессии для языка: у языка по умолчанию он исторически без приставки. */
+export const pendingKeyFor = (namespace: string): string => `${namespace}${PENDING_KEY}`;
+
 const FORMAT_VERSION = 1;
 const LIMIT = 3800;
 
@@ -94,7 +97,8 @@ export interface PendingStore {
 /** Задержка перед записью: сохранять на каждый тап по сети незачем. */
 export const SAVE_DELAY = 400;
 
-export function createPendingStore(store: KeyValueStore): PendingStore {
+export function createPendingStore(store: KeyValueStore, namespace = ''): PendingStore {
+  const key = pendingKeyFor(namespace);
   let queued: PendingSession | null = null;
   let timer: ReturnType<typeof setTimeout> | undefined;
   let writing: Promise<void> = Promise.resolve();
@@ -102,8 +106,8 @@ export function createPendingStore(store: KeyValueStore): PendingStore {
   function write(value: string | null): Promise<void> {
     writing = writing.then(async () => {
       try {
-        if (value === null) await store.removeItems([PENDING_KEY]);
-        else await store.setItem(PENDING_KEY, value);
+        if (value === null) await store.removeItems([key]);
+        else await store.setItem(key, value);
       } catch {
         // Не сохранилось — сессия просто не восстановится, это не повод падать.
       }
@@ -144,8 +148,8 @@ export function createPendingStore(store: KeyValueStore): PendingStore {
   return {
     async load() {
       try {
-        const values = await store.getItems([PENDING_KEY]);
-        return decodePending(values[PENDING_KEY]);
+        const values = await store.getItems([key]);
+        return decodePending(values[key]);
       } catch {
         return null;
       }

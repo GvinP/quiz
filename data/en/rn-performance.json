@@ -1,0 +1,342 @@
+{
+  "topic": "rn-performance",
+  "title": "React Native: Performance",
+  "version": 1,
+  "questions": [
+    {
+      "id": "rn-perf-001",
+      "topic": "rn-performance",
+      "type": "single",
+      "question": "How does virtualisation work in FlatList?",
+      "options": [
+        "Every item is rendered, but the invisible ones are hidden with display: none",
+        "Only the items in the viewport plus a buffer stay in memory; the rest are unmounted",
+        "Views are recycled: the view is not destroyed, it receives new data",
+        "The list renders items in batches on a timer until everything is drawn"
+      ],
+      "correct": [1],
+      "explanation": "FlatList unmounts items outside the window and replaces them with blank space of the right height. Unmounting rather than recycling — that is exactly what separates it from FlashList and the native RecyclerView.",
+      "followUp": [
+        "What happens if you wrap a FlatList in a ScrollView?",
+        "Why do white patches appear during fast scrolling?"
+      ],
+      "difficulty": 1
+    },
+    {
+      "id": "rn-perf-002",
+      "topic": "rn-performance",
+      "type": "single",
+      "question": "What does getItemLayout give you?",
+      "options": [
+        "It lets the list skip measuring items and scroll to an index instantly",
+        "It caches rendered cells between remounts of the list",
+        "It enables native view recycling",
+        "It sets the spacing between items without an extra component"
+      ],
+      "correct": [0],
+      "explanation": "If the item height is known in advance, the list has nothing to measure: it knows every item's position immediately. That removes work from the UI thread and makes scrollToIndex instant. Only applicable when the height is fixed or computable.",
+      "followUp": ["What do you do when heights differ but are predictable?"],
+      "difficulty": 1
+    },
+    {
+      "id": "rn-perf-003",
+      "topic": "rn-performance",
+      "type": "single",
+      "question": "What fundamentally makes FlashList faster than FlatList?",
+      "options": [
+        "It renders items on the UI thread, bypassing JS",
+        "It recycles views that already exist, swapping their data, instead of unmounting and recreating them",
+        "It loads data lazily, in pages from the server",
+        "It disables virtualisation and renders everything into memory at once"
+      ],
+      "correct": [1],
+      "explanation": "FlashList works like RecyclerView: the view is not destroyed, it is reused with new data. Fewer native view creations and less GC work — hence a steadier FPS on long feeds. It needs estimatedItemSize to compute the window.",
+      "followUp": [
+        "What is getItemType for?",
+        "What breaks when you move over from FlatList?"
+      ],
+      "difficulty": 1
+    },
+    {
+      "id": "rn-perf-004",
+      "topic": "rn-performance",
+      "type": "single",
+      "question": "After moving a product feed to FlashList, cell state \"travels\" to other products: an expanded description shows up on a neighbouring item. Why?",
+      "options": [
+        "estimatedItemSize is not set",
+        "State lives inside the cell component, and cells are recycled",
+        "keyExtractor is missing",
+        "FlashList does not support useState inside renderItem"
+      ],
+      "correct": [1],
+      "explanation": "When a view is recycled the cell component is not unmounted — it receives new data, while the local useState is left over from the previous product. The rule: cell state belongs in the data or in an external store, keyed by item id, not inside the component.",
+      "followUp": ["How does the same rule apply to animations inside a cell?"],
+      "difficulty": 3
+    },
+    {
+      "id": "rn-perf-005",
+      "topic": "rn-performance",
+      "type": "single",
+      "question": "Why does FlashList need getItemType?",
+      "options": [
+        "So recycling happens within a cell type and does not mix different layouts",
+        "To sort items by type before drawing",
+        "To give different items different entrance animations",
+        "So the list knows which items it can skip rendering"
+      ],
+      "correct": [0],
+      "explanation": "If a feed mixes products, banners and category headers, recycling a view of one type into another destroys the benefit and causes extra rebuilds. getItemType splits the recycling pools by type.",
+      "followUp": ["How does this map to viewType in RecyclerView on Android?"],
+      "difficulty": 2
+    },
+    {
+      "id": "rn-perf-006",
+      "topic": "rn-performance",
+      "type": "multi",
+      "question": "A cell is wrapped in React.memo but still re-renders on every render of the list. What could cause that?",
+      "options": [
+        "An inline function is passed as a prop and recreated on every render",
+        "An inline style object is passed as a prop: style={{ padding: 8 }}",
+        "The component subscribes to a Context whose value changes",
+        "memo does not work inside renderItem — that is a FlatList limitation"
+      ],
+      "correct": [0, 1, 2],
+      "explanation": "memo does a shallow comparison of props, so any recreated object or function defeats it. Separately: memo stops re-renders coming from the parent, but not from Context — a component subscribed to a changed context re-renders regardless. There is no FlatList limitation here.",
+      "followUp": [
+        "What is the right way to pass handlers into a cell?",
+        "Why does StyleSheet.create solve the style problem?"
+      ],
+      "difficulty": 2
+    },
+    {
+      "id": "rn-perf-007",
+      "topic": "rn-performance",
+      "type": "single",
+      "question": "What is a worklet in Reanimated?",
+      "options": [
+        "A function executed in a Web Worker in parallel with the main code",
+        "A function marked 'worklet' that runs in a separate runtime on the UI thread",
+        "A background task scheduled through InteractionManager",
+        "A native module written in C++ for animations"
+      ],
+      "correct": [1],
+      "explanation": "A worklet is compiled and executed in a separate JS runtime directly on the UI thread, through JSI. That is why animation and gesture handling do not depend on how busy the main JS thread is: the finger moves, the value changes, the view repaints — all in one frame and outside JS.",
+      "followUp": [
+        "Why can't you just call a regular function from inside a worklet?",
+        "How is a shared value different from useState?"
+      ],
+      "difficulty": 2
+    },
+    {
+      "id": "rn-perf-008",
+      "topic": "rn-performance",
+      "type": "single",
+      "question": "What is runOnJS for?",
+      "options": [
+        "To run a heavy computation in the background without blocking the UI",
+        "To call a function in the main JS runtime from a worklet running on the UI thread",
+        "To force a React render outside the queue",
+        "To run code before a navigation transition finishes"
+      ],
+      "correct": [1],
+      "explanation": "A worklet lives in a separate runtime and has no access to the normal JS context: React functions, setState and navigation are not directly reachable from there. runOnJS hands the call over to the main runtime. The reverse direction is runOnUI.",
+      "followUp": ["Why is calling runOnJS on every gesture frame a bad idea?"],
+      "difficulty": 2
+    },
+    {
+      "id": "rn-perf-009",
+      "topic": "rn-performance",
+      "type": "single",
+      "question": "Why does changing a shared value not re-render a React component?",
+      "options": [
+        "It does, React just batches those updates",
+        "A shared value lives outside React state and is read directly on the UI thread — that is the whole point",
+        "Reanimated disables reconciliation for the duration of an animation",
+        "A re-render does happen, but only in dev mode"
+      ],
+      "correct": [1],
+      "explanation": "A shared value is a value shared between the JS and UI runtimes, not React state. useAnimatedStyle reads it on the UI thread and updates the native view's style directly. If every animation frame triggered a React re-render, the point of Reanimated would be lost entirely.",
+      "followUp": ["How do you react in React to a shared value change when you actually need to?"],
+      "difficulty": 3
+    },
+    {
+      "id": "rn-perf-010",
+      "topic": "rn-performance",
+      "type": "single",
+      "question": "FPS dropped. Which conclusion is right if JS FPS specifically is low while UI FPS is fine?",
+      "options": [
+        "The problem is a complex view hierarchy and heavy images",
+        "The problem is extra renders and expensive computation in JS",
+        "The problem is native modules and their initialisation",
+        "The problem is the network — data arrives slower than frames are drawn"
+      ],
+      "correct": [1],
+      "explanation": "These are two different diagnoses. Low JS FPS means extra renders, unstable props, heavy computation in render, expensive handlers. Low UI FPS means a deep view hierarchy, large images, shadows and blurs, no cell recycling. Identifying the thread is the second step of diagnosis, after reproducing the problem.",
+      "followUp": [
+        "What do you measure each of them with?",
+        "Why must you measure on a release build and a weak device?"
+      ],
+      "difficulty": 2
+    },
+    {
+      "id": "rn-perf-011",
+      "topic": "rn-performance",
+      "type": "single",
+      "question": "How much memory does a decoded 4000×3000 image take, regardless of file size?",
+      "options": [
+        "Roughly as much as the JPEG file weighs",
+        "Roughly 12 MB",
+        "Roughly 48 MB",
+        "It depends on the compression level of the source file"
+      ],
+      "correct": [2],
+      "explanation": "A bitmap in memory takes width × height × 4 bytes (RGBA): 4000 × 3000 × 4 ≈ 48 MB. The JPEG size on disk is irrelevant here — it only affects traffic. A dozen such images in a feed means OOM on a budget Android device. The cure is resizing on the CDN to the real display size.",
+      "followUp": [
+        "How does this connect to OutOfMemory crashes in production?",
+        "What else do you do: caching, placeholders, explicit dimensions?"
+      ],
+      "difficulty": 2
+    },
+    {
+      "id": "rn-perf-012",
+      "topic": "rn-performance",
+      "type": "single",
+      "question": "What makes MMKV faster than AsyncStorage?",
+      "options": [
+        "It keeps data in memory and never writes to disk",
+        "It is C++ over mmap, reached through JSI, working synchronously and without the bridge",
+        "It compresses data before writing",
+        "It uses a separate thread for all write operations"
+      ],
+      "correct": [1],
+      "explanation": "AsyncStorage is asynchronous key-value storage over SQLite (Android) or files (iOS), going through the bridge. MMKV works through JSI over memory-mapped files, synchronously and an order of magnitude faster, and it supports encryption. In practice: MMKV for settings, flags and cache; SQLite/WatermelonDB for relational data; Keychain/Keystore for tokens.",
+      "followUp": ["Why must tokens never be stored in AsyncStorage?"],
+      "difficulty": 1
+    },
+    {
+      "id": "rn-perf-013",
+      "topic": "rn-performance",
+      "type": "single",
+      "question": "What do inline requires do?",
+      "options": [
+        "Inline dependency code straight into the calling module, shrinking the bundle",
+        "Defer running a module until it is first used, cutting startup work",
+        "Load parts of the bundle from a server on demand",
+        "Cache the result of require between app launches"
+      ],
+      "correct": [1],
+      "explanation": "A normal import executes the module when the bundle loads. Inline requires make it lazy: the module only runs on first use. At startup the whole module graph of the app is no longer executed — this is one of the main levers for cutting TTI, alongside Hermes and deferred SDK initialisation.",
+      "followUp": [
+        "What else eats startup time?",
+        "Why are top-level side effects in a module especially harmful?"
+      ],
+      "difficulty": 2
+    },
+    {
+      "id": "rn-perf-014",
+      "topic": "rn-performance",
+      "type": "single",
+      "question": "Why must you not wrap a FlatList in a ScrollView?",
+      "options": [
+        "It produces a warning but works correctly",
+        "The list gets infinite height and loses virtualisation — every item is rendered",
+        "Scroll gestures conflict and the list stops scrolling",
+        "ScrollView swallows onEndReached and pagination breaks"
+      ],
+      "correct": [1],
+      "explanation": "A ScrollView gives its child unbounded height, so the list's viewport becomes infinite and virtualisation switches off: every item mounts at once. On a long list that guarantees lag and memory growth. The right way is the list's own ListHeaderComponent / ListFooterComponent.",
+      "followUp": ["How do you build a screen with a large content block above the list?"],
+      "difficulty": 1
+    },
+    {
+      "id": "rn-perf-015",
+      "topic": "rn-performance",
+      "type": "multi",
+      "question": "Where do memory leaks most often hide in an RN app?",
+      "options": [
+        "Unclosed subscriptions to events and stores",
+        "Timers and intervals without clearTimeout/clearInterval",
+        "Caches that grow without a size limit",
+        "Using useMemo instead of useCallback"
+      ],
+      "correct": [0, 1, 2],
+      "explanation": "The usual sources: unclosed subscriptions, uncleaned timers, navigation listeners, references to unmounted components, unbounded caches, retained images, native modules that never release their resources. useMemo versus useCallback is a question of reference stability, not leaks.",
+      "followUp": [
+        "What do you catch them with: Android Studio Memory Profiler, a heap dump, Instruments?",
+        "How do you connect memory growth to OOM crashes in production?"
+      ],
+      "difficulty": 2
+    },
+    {
+      "id": "rn-perf-016",
+      "topic": "rn-performance",
+      "type": "single",
+      "question": "What does removeClippedSubviews do?",
+      "options": [
+        "Removes items from the list data after they scroll past",
+        "Detaches off-screen views from the native rendering hierarchy",
+        "Skips rendering items that have no key",
+        "Clips a cell's content to its bounds"
+      ],
+      "correct": [1],
+      "explanation": "The prop reduces UI thread load by taking invisible views out of the native hierarchy. It helps on long lists, but historically it has side effects (disappearing content, positioning problems), so enable it deliberately and check on both platforms.",
+      "followUp": ["How is this different from virtualisation at the JS level?"],
+      "difficulty": 3
+    },
+    {
+      "id": "rn-perf-017",
+      "topic": "rn-performance",
+      "type": "single",
+      "question": "What is InteractionManager for?",
+      "options": [
+        "To defer heavy work until animations and transitions have finished",
+        "To batch several state updates into one render",
+        "To manage the priority of network requests",
+        "To track user interactions for analytics"
+      ],
+      "correct": [0],
+      "explanation": "It keeps heavy work from jerking a navigation transition: the task runs after the animation completes. Today it is partly displaced by useTransition and by getting the loading architecture right, but it still shows up in RN codebases — for example, for deferring the initialisation of a heavy screen.",
+      "followUp": ["How does startTransition solve the same problem differently?"],
+      "difficulty": 2
+    },
+    {
+      "id": "rn-perf-018",
+      "topic": "rn-performance",
+      "type": "single",
+      "question": "Why must you profile on a release build and a weak device?",
+      "options": [
+        "Dev mode runs checks and logging and lacks optimisation — the numbers do not reflect reality",
+        "List virtualisation is disabled in dev mode",
+        "You cannot measure FPS on a flagship",
+        "A release build uses a different JS engine"
+      ],
+      "correct": [0],
+      "explanation": "A dev build drags along checks, warnings, no minification and a connected Metro — performance differs by a wide margin. And on a flagship half the problems simply never surface: the device swallows the extra work. Measure where your real users live.",
+      "followUp": ["Which performance metrics are worth keeping in production?"],
+      "difficulty": 1
+    },
+    {
+      "id": "rn-perf-019",
+      "topic": "rn-performance",
+      "type": "multi",
+      "question": "Which FlatList props govern the trade-off between blank areas during fast scrolling and load on JS?",
+      "options": ["windowSize", "initialNumToRender", "maxToRenderPerBatch", "keyExtractor"],
+      "correct": [0, 1, 2],
+      "explanation": "windowSize sets the window size in screens, initialNumToRender how many to draw immediately, maxToRenderPerBatch and updateCellsBatchingPeriod how many items to add per pass and how often. Growing the window removes white patches but costs memory and JS. keyExtractor has nothing to do with this trade-off — it is about item identity.",
+      "followUp": ["Why does increasing windowSize treat the symptom rather than the cause?"],
+      "difficulty": 2
+    },
+    {
+      "id": "rn-perf-020",
+      "topic": "rn-performance",
+      "type": "open",
+      "question": "\"The catalogue screen lags while scrolling. What do you do?\" Answer out loud, 3 minutes.",
+      "explanation": "What is being assessed is whether you have a method, not whether you can list optimisations.\n\n1. Clarify: on every device or only weak ones? Release or debug? Always or after some action? What exactly — stutter, white patches, delayed response?\n2. Measure: JS FPS and UI FPS separately\n3. Hypotheses by thread:\n   • JS low → extra cell renders, heavy renderItem, unstable props, computation in render\n   • UI low → deep view hierarchy, large images, shadows, no recycling\n4. Checklist: memo on the cell, stable renderItem, StyleSheet instead of inline, getItemLayout / estimatedItemSize, image dimensions\n5. Fix one hypothesis at a time and measure\n6. Lock it in with a metric or a test so the regression cannot come back",
+      "followUp": [
+        "How do you make sure the improvement came from your change specifically?",
+        "Which metric would you keep in production to catch a regression?"
+      ],
+      "difficulty": 3
+    }
+  ]
+}

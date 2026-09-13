@@ -1,0 +1,6 @@
+{
+  "topics": [
+    { "topic": "rn-architecture", "title": "React Native: Architecture",  "group": "React Native", "order": 5 },
+    { "topic": "rn-performance",  "title": "React Native: Performance",   "group": "React Native", "order": 6 }
+  ]
+}

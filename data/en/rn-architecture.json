@@ -1,0 +1,351 @@
+{
+  "topic": "rn-architecture",
+  "title": "React Native: Architecture",
+  "version": 1,
+  "questions": [
+    {
+      "id": "rn-arch-001",
+      "topic": "rn-architecture",
+      "type": "multi",
+      "question": "Which threads did the old React Native architecture use?",
+      "options": [
+        "The JS thread — runs your code and React",
+        "The native (main/UI) thread — draws native views and handles gestures",
+        "The shadow thread — computes layout through Yoga",
+        "The network thread — runs every network request"
+      ],
+      "correct": [0, 1, 2],
+      "explanation": "Three threads: JS, native (main) and shadow. There is no dedicated network thread — requests go down to the native layer and are handled by the platform's own thread pool, and the result comes back to JS across the bridge.",
+      "followUp": [
+        "What happens if you block the JS thread with a heavy computation?",
+        "Why does an animation with useNativeDriver: true survive a blocked JS thread?"
+      ],
+      "difficulty": 1
+    },
+    {
+      "id": "rn-arch-002",
+      "topic": "rn-architecture",
+      "type": "single",
+      "question": "Why was the bridge a bottleneck in the old architecture?",
+      "options": [
+        "It was synchronous and blocked both threads on every call",
+        "Every message was serialised to JSON and passed asynchronously in batches",
+        "It only worked one way — from JS to native",
+        "It capped the number of native modules an app could have"
+      ],
+      "correct": [1],
+      "explanation": "The bridge was asynchronous, batched and fully serialised: every message became a JSON string, went into a queue and was deserialised on the other side. Three consequences follow — no synchronous calls, expensive transfer of large payloads, and stutter under dense traffic, when every frame needs a round trip.",
+      "followUp": [
+        "Why did blank cells appear in the old FlatList during fast scrolling?",
+        "How does this relate to Animated stuttering without the native driver?"
+      ],
+      "difficulty": 1
+    },
+    {
+      "id": "rn-arch-003",
+      "topic": "rn-architecture",
+      "type": "single",
+      "question": "What is JSI?",
+      "options": [
+        "A new JavaScript engine that replaced JavaScriptCore",
+        "A serialisation format that succeeded JSON on the bridge",
+        "A lightweight C++ layer that gives JS direct references to native objects",
+        "A type system for native modules"
+      ],
+      "correct": [2],
+      "explanation": "JavaScript Interface — a thin C++ layer through which JS holds a HostObject (a wrapper around a C++ object) and calls its methods directly and synchronously, with no serialisation and no queue. Everything else is built on JSI: TurboModules, Fabric, Reanimated 2+, MMKV. It also abstracts the engine, which is why RN can run on Hermes, JSC or V8.",
+      "followUp": [
+        "Are synchronous calls always a good thing?",
+        "Has the bridge disappeared completely?"
+      ],
+      "difficulty": 1
+    },
+    {
+      "id": "rn-arch-004",
+      "topic": "rn-architecture",
+      "type": "single",
+      "question": "How do TurboModules differ from the old native modules?",
+      "options": [
+        "They are written in TypeScript instead of Java and Objective-C",
+        "They are loaded lazily on first use and reached through JSI",
+        "They run on a separate thread without blocking JS",
+        "They only work with the new architecture on Android"
+      ],
+      "correct": [1],
+      "explanation": "Old modules were all registered at startup, whether or not they were used — which cost launch time. TurboModules load on first access and are reached directly through JSI, synchronously where needed. Add type safety on top: the interface is described in a TS spec and Codegen generates the native glue, so a type mismatch is caught at build time.",
+      "followUp": [
+        "What does a spec file look like?",
+        "What do you do with a library that does not support the new architecture?"
+      ],
+      "difficulty": 2
+    },
+    {
+      "id": "rn-arch-005",
+      "topic": "rn-architecture",
+      "type": "single",
+      "question": "What does Codegen do?",
+      "options": [
+        "Compiles JavaScript to bytecode at build time",
+        "Generates native C++/Java/ObjC interfaces from TypeScript specs",
+        "Optimises the JS bundle by stripping unused code",
+        "Scaffolds new screens and components"
+      ],
+      "correct": [1],
+      "explanation": "Codegen takes the TS types of a native module or component spec (files named Native*.ts and *NativeComponent.ts) and generates native interfaces for both platforms from them. That guarantees JS and native agree on the same types, and turns a mismatch into a build error rather than a runtime bug. TurboModules do not work without Codegen.",
+      "followUp": [
+        "When does generation run?",
+        "How is it different from Hermes AOT compilation?"
+      ],
+      "difficulty": 2
+    },
+    {
+      "id": "rn-arch-006",
+      "topic": "rn-architecture",
+      "type": "multi",
+      "question": "Which of these are true about Fabric?",
+      "options": [
+        "The React Shadow Tree is immutable and can be shared safely across threads",
+        "The core is written in C++ and shared between iOS and Android",
+        "Rendering can run synchronously on the UI thread when that is needed",
+        "It replaces Yoga with its own layout engine"
+      ],
+      "correct": [0, 1, 2],
+      "explanation": "Fabric is the new renderer. The tree is immutable and shareable across threads, which gives safe concurrency and support for Concurrent React. The C++ core is shared between platforms, so there is less behavioural drift. Rendering can run synchronously on the UI thread — hence reliable measurement without a frame of jumping. Yoga stays: Fabric uses it rather than replacing it.",
+      "followUp": [
+        "What are the commit and mount phases?",
+        "What is view flattening?"
+      ],
+      "difficulty": 2
+    },
+    {
+      "id": "rn-arch-007",
+      "topic": "rn-architecture",
+      "type": "single",
+      "question": "What is view flattening in Fabric?",
+      "options": [
+        "Collapsing views that exist only for layout, to reduce native hierarchy depth",
+        "Merging nested styles into one flat object",
+        "Turning the component tree into a flat list for virtualisation",
+        "Disabling shadows and rounded corners for performance"
+      ],
+      "correct": [0],
+      "explanation": "Fabric can skip creating a native view for nodes that exist purely for layout and draw nothing of their own. Fewer native views means less work on the UI thread and less memory. This is one reason deep layouts are cheaper on the new architecture than on the old one.",
+      "followUp": ["Why does view hierarchy depth affect FPS in the first place?"],
+      "difficulty": 3
+    },
+    {
+      "id": "rn-arch-008",
+      "topic": "rn-architecture",
+      "type": "single",
+      "question": "The main advantage of Hermes is…",
+      "options": [
+        "JIT compilation, giving maximum peak performance",
+        "AOT compilation to bytecode at build time: the app does not parse JS at startup",
+        "Built-in TypeScript support with no transpilation",
+        "Automatic parallelisation of JS code across cores"
+      ],
+      "correct": [1],
+      "explanation": "Hermes compiles JS to bytecode ahead of time, at build. The app spends no time parsing at startup — hence noticeably faster launch and lower memory use. Add a compact size and a GC tuned for constrained devices. Hermes has no JIT, which is exactly why it can lose to JIT engines on long-running computation.",
+      "followUp": [
+        "What do you need to set up so that Sentry stack traces are readable?",
+        "In which scenarios can Hermes be slower than JSC?"
+      ],
+      "difficulty": 1
+    },
+    {
+      "id": "rn-arch-009",
+      "topic": "rn-architecture",
+      "type": "single",
+      "question": "An app runs on Hermes and Sentry reports crashes with unreadable stack traces. What was forgotten?",
+      "options": [
+        "Enabling Hermes in the release configuration",
+        "Uploading source maps for the Hermes bytecode and dSYMs for iOS",
+        "Disabling minification in Metro",
+        "Adding Sentry to the TurboModules list"
+      ],
+      "correct": [1],
+      "explanation": "Hermes executes bytecode, so a crash shows positions inside the .hbc, not in your sources. You need source maps uploaded on every build (and dSYMs for the iOS native side), tied to the release and version. Without that, reading production crashes turns into guesswork.",
+      "followUp": ["How do you tie a crash to a specific release and OTA bundle?"],
+      "difficulty": 2
+    },
+    {
+      "id": "rn-arch-010",
+      "topic": "rn-architecture",
+      "type": "single",
+      "question": "What is bridgeless mode?",
+      "options": [
+        "A mode where the bridge is gone entirely and everything goes through JSI",
+        "A development mode without the Metro server",
+        "A build with no native modules, JS only",
+        "Turning the bridge off during animations for performance"
+      ],
+      "correct": [0],
+      "explanation": "In bridgeless mode RCTBridge is not involved at all, initialisation is restructured, and everything goes through JSI and the new runtime. It became the default from RN 0.74+, and in 0.76 the new architecture is on by default. An interop layer keeps old modules working.",
+      "followUp": ["What exactly does \"the new architecture\" cover?"],
+      "difficulty": 2
+    },
+    {
+      "id": "rn-arch-011",
+      "topic": "rn-architecture",
+      "type": "multi",
+      "question": "What is part of React Native's \"new architecture\"?",
+      "options": ["JSI", "TurboModules", "Fabric", "Codegen", "Hermes"],
+      "correct": [0, 1, 2, 3],
+      "explanation": "The new architecture = JSI + TurboModules + Fabric + Codegen + bridgeless. Hermes is a separate thing: it is a JS engine, it arrived earlier and can be used with the old architecture too. A common interview slip is treating \"Fabric\" and \"the new architecture\" as synonyms: Fabric is only the renderer.",
+      "followUp": ["Which part handles rendering and which one handles access to native code?"],
+      "difficulty": 2
+    },
+    {
+      "id": "rn-arch-012",
+      "topic": "rn-architecture",
+      "type": "single",
+      "question": "What does Yoga do?",
+      "options": [
+        "A cross-platform layout engine implementing a subset of flexbox",
+        "An animation library running on the UI thread",
+        "An image caching layer",
+        "A task scheduler between the JS and native threads"
+      ],
+      "correct": [0],
+      "explanation": "Yoga is written in C, called from the shadow tree, and computes positions and sizes before they reach native views. Differences from the web: flexDirection defaults to column, there is no float or grid, units are density-independent pixels, and some CSS properties are unsupported.",
+      "followUp": ["Why does flexDirection default to column rather than row?"],
+      "difficulty": 1
+    },
+    {
+      "id": "rn-arch-013",
+      "topic": "rn-architecture",
+      "type": "single",
+      "question": "What is the fundamental difference between Metro and Webpack?",
+      "options": [
+        "Metro cannot transpile code, only bundle it",
+        "Metro resolves platform-specific file extensions and is built for incremental mobile builds",
+        "Metro only works with CommonJS modules",
+        "Metro builds on the device rather than on the developer's machine"
+      ],
+      "correct": [1],
+      "explanation": "Metro handles platform extensions (.ios.tsx / .android.tsx), works with assets by screen density (@2x, @3x), supports RAM bundles and inline requires, and is built for fast incremental rebuilds and Fast Refresh. Historically it has no full tree shaking and its own resolution system — hence the specific pains in monorepos.",
+      "followUp": [
+        "What problems does a monorepo bring: watchFolders, symlinks, duplicate packages?",
+        "Why does a duplicate package break singletons and instanceof?"
+      ],
+      "difficulty": 2
+    },
+    {
+      "id": "rn-arch-014",
+      "topic": "rn-architecture",
+      "type": "single",
+      "question": "Put the app startup stages in the right order.",
+      "options": [
+        "JS bundle load → native init → first render → layout → first frame",
+        "Native init → JS bundle load → entry point runs → first React render → layout in Yoga → native views created → first frame",
+        "First React render → native init → bundle load → first frame",
+        "Native init → first frame → JS bundle load → render"
+      ],
+      "correct": [1],
+      "explanation": "The OS launches the native app, the RN host and runtime initialise, the JS bundle loads (ready-made bytecode with Hermes), the entry point runs and registers the root component, React renders the first tree, Yoga computes layout, native views are created, and the first frame appears. Every one of these stages is a potential place to optimise TTI.",
+      "followUp": [
+        "Where can you win the most time here?",
+        "Why is initialising analytics and attribution SDKs at startup a classic loss?"
+      ],
+      "difficulty": 2
+    },
+    {
+      "id": "rn-arch-015",
+      "topic": "rn-architecture",
+      "type": "single",
+      "question": "What is the interop layer in the new architecture?",
+      "options": [
+        "A translation layer between JS and TypeScript types",
+        "A compatibility layer that lets old modules and components work on the new architecture",
+        "A bridge between the Android and iOS implementations of one module",
+        "A shim between Metro and Gradle"
+      ],
+      "correct": [1],
+      "explanation": "The interop layer lets libraries written for the old architecture work in bridgeless mode without a rewrite. This is the key piece for migrating a large app: you do not have to wait for every dependency to update, you can move across in stages.",
+      "followUp": [
+        "How do you check which libraries support the new architecture?",
+        "What overhead does interop add?"
+      ],
+      "difficulty": 3
+    },
+    {
+      "id": "rn-arch-016",
+      "topic": "rn-architecture",
+      "type": "single",
+      "question": "Why can Animated stutter with useNativeDriver: false but not with true?",
+      "options": [
+        "With false the animation is computed in JS and every frame is sent to native; with true it is handed to native up front",
+        "With false it uses the old renderer, with true it uses Fabric",
+        "With true the animation runs on the shadow thread rather than the UI thread",
+        "With false hardware acceleration is disabled"
+      ],
+      "correct": [0],
+      "explanation": "Without the native driver every animation frame is computed in JS and passed across the bridge — with a busy JS thread, frames get dropped. With useNativeDriver: true the animation description is handed to native once and played there, independently of JS. The limitation: it only works for properties that do not affect layout — transform and opacity.",
+      "followUp": ["How does Reanimated solve the same problem, and why does it have no property restriction?"],
+      "difficulty": 2
+    },
+    {
+      "id": "rn-arch-017",
+      "topic": "rn-architecture",
+      "type": "single",
+      "question": "What happens today when you call a native module on the new architecture?",
+      "options": [
+        "Arguments are serialised to JSON and queued on the bridge",
+        "The call goes straight through JSI to a C++ object, possibly synchronously",
+        "The call passes through the shadow thread and reaches native after layout",
+        "Metro intercepts the call and routes it into the native binary"
+      ],
+      "correct": [1],
+      "explanation": "Through JSI, JS holds a reference to a HostObject and calls the method directly — no JSON serialisation and no queue. Asynchronous methods can still return a promise, but the call mechanism itself is fundamentally cheaper. This is exactly what makes MMKV with synchronous reads and Reanimated with worklets possible.",
+      "followUp": ["Why is a synchronous call to a heavy operation still a bad idea?"],
+      "difficulty": 2
+    },
+    {
+      "id": "rn-arch-018",
+      "topic": "rn-architecture",
+      "type": "single",
+      "question": "In a monorepo, after installing dependencies, instanceof broke and a singleton in a shared package stopped working. Most likely cause?",
+      "options": [
+        "Metro has not rebuilt its cache yet",
+        "Two copies of the same package ended up in the dependency tree, and Metro resolves them as different modules",
+        "The package is built for the old architecture",
+        "A TypeScript version conflict between packages"
+      ],
+      "correct": [1],
+      "explanation": "Modules are cached by resolved path. Two physical copies of a package are two different modules with two different classes and two instances of the \"singleton\". The cure is deduplicating dependencies, hoisting, resolutions/overrides, or pointing the Metro resolver explicitly at a single path.",
+      "followUp": [
+        "How does this show up with React, and why is \"Invalid hook call\" often the same thing?",
+        "How did you configure watchFolders and the resolver for internal packages?"
+      ],
+      "difficulty": 3
+    },
+    {
+      "id": "rn-arch-019",
+      "topic": "rn-architecture",
+      "type": "single",
+      "question": "Why did the Shadow Tree need to become immutable in the new architecture?",
+      "options": [
+        "To reduce memory usage",
+        "So the tree can be read safely from several threads and support interruptible concurrent rendering",
+        "To avoid memory leaks on unmount",
+        "So React can compare trees by reference instead of deep comparison"
+      ],
+      "correct": [1],
+      "explanation": "Immutability means nobody mutates the existing tree — a new version is built alongside it. So the UI thread can safely read the current tree while background work prepares the next one, and unfinished work can be thrown away with no side effects. That is precisely the condition for Concurrent React in RN.",
+      "followUp": ["How does this relate to the two phases in React Fiber?"],
+      "difficulty": 3
+    },
+    {
+      "id": "rn-arch-020",
+      "topic": "rn-architecture",
+      "type": "open",
+      "question": "How would you organise migrating a large production app to the new architecture? Answer out loud, 2–3 minutes.",
+      "explanation": "What is expected is a process, not a list of technologies:\n\n1. Inventory the dependencies — which libraries support the new architecture (react-native-directory), which have to be replaced or wrapped\n2. Upgrade RN one minor version at a time, not in one jump\n3. Turn the new architecture on for dev builds and internal testing\n4. Interop layer for incompatible modules, replacing the worst offenders\n5. Run e2e and measure performance before and after\n6. Roll out behind a feature flag or by percentage, watching the crash-free rate\n\nA strong answer always names the risks and how you would spot them. If your migration is not finished yet, say so plainly: \"here is what is done, here is what is blocking\". That sounds more honest and more convincing than perfect theory.",
+      "followUp": [
+        "What would you do if a key library does not support the new architecture and is no longer maintained?",
+        "How would you roll back if crashes went up after the release?"
+      ],
+      "difficulty": 3
+    }
+  ]
+}
