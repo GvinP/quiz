@@ -139,3 +139,34 @@ test('очистка стирает прогресс и не трогает чу
   assert.deepEqual([...fake.data.keys()], ['theme']);
   assert.deepEqual(await createProgressStore(fake.store).load(), {});
 });
+
+test('языки не видят прогресс друг друга', async () => {
+  const fake = fakeStore();
+  const ru = createProgressStore(fake.store);
+  const en = createProgressStore(fake.store, 'en_');
+
+  ru.record('rn-architecture', 'rn-arch-001', true, 100);
+  en.record('rn-architecture', 'rn-arch-001', false, 100);
+  await ru.flush();
+  await en.flush();
+
+  const reloadedRu = await createProgressStore(fake.store).load();
+  const reloadedEn = await createProgressStore(fake.store, 'en_').load();
+
+  assert.equal(reloadedRu['rn-architecture']['rn-arch-001'].box, 2, 'русский ответ верный');
+  assert.equal(reloadedEn['rn-architecture']['rn-arch-001'].box, 1, 'английский — неверный');
+});
+
+test('тема, начинающаяся с кода языка, не путается с чужим ключом', async () => {
+  const fake = fakeStore();
+  const ru = createProgressStore(fake.store);
+  // Ровно тот случай, на котором ломалась прежняя эвристика по первым буквам.
+  for (const topic of ['rn-architecture', 'js-core', 'cs-fundamentals', 'en-something']) {
+    ru.record(topic, `${topic}-001`, true, 100);
+  }
+  await ru.flush();
+
+  const reloaded = await createProgressStore(fake.store).load();
+  assert.deepEqual(Object.keys(reloaded).sort(), ['cs-fundamentals', 'en-something', 'js-core', 'rn-architecture']);
+  assert.deepEqual(await createProgressStore(fake.store, 'en_').load(), {}, 'английский остаётся пустым');
+});

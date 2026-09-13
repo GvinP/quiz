@@ -6,6 +6,7 @@ import { AnswerOptions } from '../components/AnswerOptions.tsx';
 import { Explanation } from '../components/Explanation.tsx';
 import { haptic } from '../telegram/webapp.ts';
 import { useBackButton } from '../telegram/useBackButton.ts';
+import { useStrings } from '../i18n/context.tsx';
 
 export interface AnswerResult {
   question: Question;
@@ -52,6 +53,7 @@ export function Session({
       correct,
     })),
   );
+  const t = useStrings();
   const nativeBack = useBackButton(onExit);
 
   // Следующий вопрос должен открываться сверху. Сейчас браузер и так зажимает
@@ -115,7 +117,7 @@ export function Session({
       <header className="session-header">
         {!nativeBack && (
           <button type="button" className="link" onClick={onExit}>
-            ← Выйти
+            {t.exit}
           </button>
         )}
         <span className="hint">
@@ -127,14 +129,14 @@ export function Session({
 
       <article className="question">
         <p className="hint">
-          {title} · сложность {question.difficulty}
+          {title} · {t.difficulty(question.difficulty)}
         </p>
         <Markdown source={question.question} className="question-text" />
 
         {open ? (
           revealed ? null : (
             <p className="hint">
-              Ответь вслух, потом открой разбор и оцени себя честно.
+              {t.openHint}
             </p>
           )
         ) : (
@@ -152,7 +154,7 @@ export function Session({
           <>
             {!open && (
               <p className={results[results.length - 1]?.correct ? 'verdict right' : 'verdict wrong'}>
-                {results[results.length - 1]?.correct ? 'Верно' : 'Неверно'}
+                {results[results.length - 1]?.correct ? t.right : t.wrong}
               </p>
             )}
             <Explanation explanation={question.explanation} followUp={question.followUp} />
@@ -163,20 +165,20 @@ export function Session({
       <footer className="actions">
         {open && !revealed && (
           <button type="button" className="primary" onClick={() => setRevealed(true)}>
-            Показать ответ
+            {t.showAnswer}
           </button>
         )}
 
         {open && revealed && (
           <div className="grades">
             <button type="button" className="primary" onClick={() => grade('knew')}>
-              Знал
+              {t.gradeKnew}
             </button>
             <button type="button" onClick={() => grade('partly')}>
-              Частично
+              {t.gradePartly}
             </button>
             <button type="button" onClick={() => grade('missed')}>
-              Не знал
+              {t.gradeMissed}
             </button>
           </div>
         )}
@@ -188,13 +190,13 @@ export function Session({
             disabled={selected.length === 0}
             onClick={() => commit(selected)}
           >
-            Ответить
+            {t.answer}
           </button>
         )}
 
         {!open && revealed && (
           <button type="button" className="primary" onClick={() => advance()}>
-            {index + 1 >= questions.length ? 'Результат' : 'Дальше'}
+            {index + 1 >= questions.length ? t.toResult : t.next}
           </button>
         )}
       </footer>

@@ -1,10 +1,14 @@
 import { useEffect, useMemo, useState } from 'react';
-import { topicRefs, loadAllTopics } from './data/topics.ts';
+import { topicRefsFor, loadTopics, availableLanguages } from './data/topics.ts';
 import { createProgressStore } from './progress/store.ts';
 import { pickStore } from './progress/storage.ts';
 import { quizQueue } from './progress/selectors.ts';
 import { createPendingStore, resolvePending } from './session/pending.ts';
 import type { ResolvedSession } from './session/pending.ts';
+import { readLanguage, writeLanguage, namespaceOf } from './i18n/language.ts';
+import type { Language } from './i18n/language.ts';
+import { LanguageProvider } from './i18n/context.tsx';
+import { STRINGS } from './i18n/strings.ts';
 import { Home } from './screens/Home.tsx';
 import { Topics } from './screens/Topics.tsx';
 import { Session } from './screens/Session.tsx';
@@ -20,9 +24,32 @@ type Screen =
   | { name: 'result'; title: string; questions: Question[]; results: AnswerResult[] };
 
 export function App() {
+  const [language, setLanguage] = useState<Language>(readLanguage);
+
+  return (
+    <LanguageProvider language={language}>
+      <Quiz
+        key={language}
+        language={language}
+        onLanguage={(next) => {
+          writeLanguage(next);
+          setLanguage(next);
+        }}
+      />
+    </LanguageProvider>
+  );
+}
+
+/**
+ * Пересоздаётся при смене языка (key={language} выше): вместе с ним заново
+ * читаются темы, прогресс и незаконченная сессия — каждая в своём
+ * пространстве имён, чтобы второй проход начинался с чистого листа.
+ */
+function Quiz({ language, onLanguage }: { language: Language; onLanguage: (l: Language) => void }) {
   const storage = useMemo(() => pickStore(), []);
-  const store = useMemo(() => createProgressStore(storage), [storage]);
-  const pendingStore = useMemo(() => createPendingStore(storage), [storage]);
+  const namespace = namespaceOf(language);
+  const store = useMemo(() => createProgressStore(storage, namespace), [storage, namespace]);
+  const pendingStore = useMemo(() => createPendingStore(storage, namespace), [storage, namespace]);
 
   const [topics, setTopics] = useState<TopicFile[] | null>(null);
   const [progress, setProgress] = useState<Progress>({});
@@ -32,7 +59,7 @@ export function App() {
   useEffect(() => {
     void (async () => {
       const [loadedTopics, loadedProgress, saved] = await Promise.all([
-        loadAllTopics(),
+        loadTopics(language),
         store.load(),
         pendingStore.load(),
       ]);
@@ -57,7 +84,7 @@ export function App() {
     };
     window.addEventListener('pagehide', flush);
     return () => window.removeEventListener('pagehide', flush);
-  }, [store, pendingStore]);
+  }, [language, store, pendingStore]);
 
   // Главный экран рисуется сразу: названия и порядок тем известны из реестра,
   // а счётчики режимов появляются, когда догрузятся сами темы.
@@ -78,7 +105,7 @@ export function App() {
 
   switch (screen.name) {
     case 'topics':
-      if (topics === null) return <p className="hint">Загрузка тем…</p>;
+      if (topics === null) return <p className="hint">{STRINGS[language].loadingTopics}</p>;
       return (
         <Topics
           topics={topics}
@@ -121,15 +148,18 @@ export function App() {
     default:
       return (
         <Home
-          topicCount={topicRefs.length}
+          topicCount={topicRefsFor(language).length}
           questions={questions}
           loading={topics === null}
           progress={progress}
           pending={pending}
+          languages={availableLanguages()}
+          language={language}
+          onLanguage={onLanguage}
           onResume={() => pending && start(pending.title, pending.questions, pending.answers)}
           onQuiz={() => setScreen({ name: 'topics' })}
-          onReview={(queue) => start('Повторение', queue)}
-          onWeak={(queue) => start('Работа над ошибками', queue)}
+          onReview={(queue) => start(STRINGS[language].review, queue)}
+          onWeak={(queue) => start(STRINGS[language].weak, queue)}
         />
       );
   }

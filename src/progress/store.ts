@@ -12,15 +12,26 @@ export const FLUSH_DELAY = 800;
 /**
  * Ключи CloudStorage допускают только A-Z, a-z, 0-9, _ и -, поэтому
  * двоеточие из чернового формата (`progress:topic`) использовать нельзя.
+ *
+ * `namespace` разводит языки: второй проход по тем же вопросам на другом
+ * языке должен начинаться с чистого листа, иначе всё сразу числится
+ * выученным. Это приставка перед именем ключа, а не часть имени темы, —
+ * иначе `progress_en-…` было бы не отличить от темы, начинающейся с `en-`.
  */
-const keyFor = (topic: string, chunk: number): string =>
-  `${KEY_PREFIX}${topic.replace(/[^A-Za-z0-9_-]/g, '_')}__${chunk}`;
+function makeKeys(namespace: string) {
+  const prefix = `${namespace}${KEY_PREFIX}`;
 
-const parseKey = (key: string): { topic: string; chunk: number } | null => {
-  if (!key.startsWith(KEY_PREFIX)) return null;
-  const match = /^(.*)__(\d+)$/.exec(key.slice(KEY_PREFIX.length));
-  return match ? { topic: match[1], chunk: Number(match[2]) } : null;
-};
+  return {
+    keyFor: (topic: string, chunk: number): string =>
+      `${prefix}${topic.replace(/[^A-Za-z0-9_-]/g, '_')}__${chunk}`,
+
+    parseKey: (key: string): { topic: string; chunk: number } | null => {
+      if (!key.startsWith(prefix)) return null;
+      const match = /^(.*)__(\d+)$/.exec(key.slice(prefix.length));
+      return match ? { topic: match[1], chunk: Number(match[2]) } : null;
+    },
+  };
+}
 
 export interface ProgressStore {
   /** Читает прогресс из хранилища. Вызывается один раз на старте. */
@@ -36,7 +47,8 @@ export interface ProgressStore {
   clear(): Promise<void>;
 }
 
-export function createProgressStore(store: KeyValueStore): ProgressStore {
+export function createProgressStore(store: KeyValueStore, namespace = ''): ProgressStore {
+  const { keyFor, parseKey } = makeKeys(namespace);
   let progress: Progress = {};
   const dirty = new Set<string>();
   /** Сколько ключей занимала тема при последней записи — лишние надо удалить. */

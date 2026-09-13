@@ -1,5 +1,6 @@
 import type { AnswerResult } from './Session.tsx';
 import { useBackButton } from '../telegram/useBackButton.ts';
+import { useStrings } from '../i18n/context.tsx';
 
 interface ResultProps {
   results: AnswerResult[];
@@ -17,6 +18,7 @@ function summarize(question: string): string {
 }
 
 export function Result({ results, onRestart, onHome }: ResultProps) {
+  const t = useStrings();
   useBackButton(onHome);
 
   const correct = results.filter((result) => result.correct).length;
@@ -25,18 +27,14 @@ export function Result({ results, onRestart, onHome }: ResultProps) {
   return (
     <div className="screen">
       <div className="content">
-        <h1>
-          {correct} из {results.length}
-        </h1>
+        <h1>{t.score(correct, results.length)}</h1>
         <p className="hint">
-          {missed.length === 0
-            ? 'Без единой ошибки.'
-            : `Ушло в работу над ошибками: ${missed.length}.`}
+          {missed.length === 0 ? t.flawless : t.missedCount(missed.length)}
         </p>
 
         {missed.length > 0 && (
           <section>
-            <h2>Что стоит повторить</h2>
+            <h2>{t.worthRepeating}</h2>
             <ul className="mistakes">
               {missed.map(({ question }) => (
                 <li key={question.id}>{summarize(question.question)}</li>
@@ -48,10 +46,10 @@ export function Result({ results, onRestart, onHome }: ResultProps) {
 
       <footer className="actions">
         <button type="button" className="primary" onClick={onHome}>
-          На главную
+          {t.toHome}
         </button>
         <button type="button" onClick={onRestart}>
-          Пройти заново
+          {t.restart}
         </button>
       </footer>
     </div>
