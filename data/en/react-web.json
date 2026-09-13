@@ -1,0 +1,272 @@
+{
+  "topic": "react-web",
+  "title": "React for the Web and the Browser",
+  "version": 1,
+  "questions": [
+    {
+      "id": "web-001",
+      "topic": "react-web",
+      "type": "single",
+      "question": "What are event bubbling and delegation?",
+      "options": [
+        "The event travels from the document to the element, and delegation cancels it",
+        "The event rises from the element to its ancestors; delegation means one handler on a container instead of a handler on every element",
+        "Bubbling only works for mouse events",
+        "Delegation means passing a handler down through props"
+      ],
+      "correct": [1],
+      "explanation": "The phases are capture → target → bubbling. Delegation saves memory and works for elements added dynamically. React for its part uses synthetic events and a single root listener (since React 17 on the render container rather than on document).",
+      "followUp": ["How does stopPropagation differ from preventDefault?"],
+      "difficulty": 1
+    },
+    {
+      "id": "web-002",
+      "topic": "react-web",
+      "type": "single",
+      "question": "What is the critical rendering path?",
+      "options": [
+        "The order in which JS modules load inside the bundle",
+        "The path from receiving the HTML to the first painted frame: DOM → CSSOM → render tree → layout → paint",
+        "The route a request takes from the browser to the server",
+        "The priority of CSS rules when selectors conflict"
+      ],
+      "correct": [1],
+      "explanation": "Blocking resources lengthen this path: a synchronous <script> in <head> stops HTML parsing, and CSS blocks rendering. Hence defer/async, inlined critical CSS, and preloading fonts.",
+      "followUp": ["What is the difference between defer and async?"],
+      "difficulty": 2
+    },
+    {
+      "id": "web-003",
+      "topic": "react-web",
+      "type": "single",
+      "question": "What do the Core Web Vitals — LCP, INP, CLS — measure?",
+      "options": [
+        "Network speed, bundle size and request count",
+        "How long the main content takes to paint, how responsive interactions are, and visual stability",
+        "Test coverage, code complexity and error count",
+        "Time to first byte, DNS resolution and the TLS handshake"
+      ],
+      "correct": [1],
+      "explanation": "LCP is when the largest element painted; INP (which replaced FID) is the delay in responding to interactions; CLS is how much the layout jumps. CLS is most often ruined by images without explicit dimensions and fonts without fallback metrics.",
+      "followUp": ["How do you connect these metrics to actual conversion?"],
+      "difficulty": 2
+    },
+    {
+      "id": "web-004",
+      "topic": "react-web",
+      "type": "single",
+      "question": "What is CORS?",
+      "options": [
+        "A client-side protection mechanism against XSS",
+        "A mechanism by which the server allows the browser to read the response to a cross-origin request",
+        "An encryption protocol for cross-domain requests",
+        "A way to share cookies between subdomains"
+      ],
+      "correct": [1],
+      "explanation": "The restriction is imposed by the browser, and the permission is granted by the server through Access-Control-Allow-* headers. The request usually goes out and executes — the browser simply refuses to let you read the response. \"Complex\" requests are preceded by a preflight OPTIONS. Important: CORS does not protect the server, it protects the user.",
+      "followUp": ["Why does CORS not save you from CSRF, and what does?"],
+      "difficulty": 2
+    },
+    {
+      "id": "web-005",
+      "topic": "react-web",
+      "type": "multi",
+      "question": "How does a cookie differ from localStorage?",
+      "options": [
+        "A cookie is sent to the server automatically with every request",
+        "A cookie has a lifetime and the HttpOnly, Secure and SameSite flags",
+        "localStorage is readable from JS, so it is vulnerable to theft through XSS",
+        "localStorage synchronises between tabs automatically"
+      ],
+      "correct": [0, 1, 2],
+      "explanation": "For tokens a cookie with HttpOnly + Secure + SameSite is safer, because JS cannot reach it. localStorage is more convenient for non-secret data. There are storage events between tabs, but that is not automatic state synchronisation.",
+      "followUp": ["What does SameSite=Lax do and what does it protect against?"],
+      "difficulty": 2
+    },
+    {
+      "id": "web-006",
+      "topic": "react-web",
+      "type": "single",
+      "question": "What is hydration in React?",
+      "options": [
+        "Fetching data after a component mounts",
+        "Attaching React to already-rendered server markup: wiring handlers and restoring state without repainting",
+        "Caching render output on the server",
+        "Loading images progressively as you scroll"
+      ],
+      "correct": [1],
+      "explanation": "The server sends finished HTML — the user sees content quickly, but the page is not interactive yet. Hydration brings it to life. Hence the classic bug: if the server and client markup diverge (a date, Math.random, window), React complains about a mismatch.",
+      "followUp": ["What are streaming SSR and selective hydration?"],
+      "difficulty": 2
+    },
+    {
+      "id": "web-007",
+      "topic": "react-web",
+      "type": "single",
+      "question": "How do Server Components (RSC) differ from SSR?",
+      "options": [
+        "They are the same thing under different names",
+        "SSR renders HTML on the server and hydrates it on the client; RSC never send their JS to the client at all",
+        "RSC only work together with GraphQL",
+        "SSR is only available in Next.js, while RSC work in any React app"
+      ],
+      "correct": [1],
+      "explanation": "RSC execute on the server only: their code and dependencies never reach the bundle, and they can talk to a database directly. They have no state and no effects. Client components ('use client') work as usual. The main win is bundle size and data access without an API layer.",
+      "followUp": ["Why are RSC still barely applicable in React Native?"],
+      "difficulty": 3
+    },
+    {
+      "id": "web-008",
+      "topic": "react-web",
+      "type": "single",
+      "question": "How does a controlled component differ from an uncontrolled one?",
+      "options": [
+        "A controlled one keeps the value in React state and updates through onChange; an uncontrolled one keeps the value in the DOM itself",
+        "Controlled only works with forms, uncontrolled with any element",
+        "An uncontrolled component cannot be validated",
+        "The only difference is having a defaultValue attribute"
+      ],
+      "correct": [0],
+      "explanation": "Controlled gives full control and instant validation but re-renders the component on every character — noticeable in a large form. Uncontrolled (through a ref or defaultValue) is faster and simpler. Libraries like react-hook-form deliberately use uncontrolled inputs for performance.",
+      "followUp": ["Why do controlled inputs become a bottleneck in a large form?"],
+      "difficulty": 1
+    },
+    {
+      "id": "web-009",
+      "topic": "react-web",
+      "type": "single",
+      "question": "What are portals for?",
+      "options": [
+        "Rendering a component into a different DOM node while keeping its place in the React tree",
+        "Passing data deep down without props",
+        "Loading components on demand",
+        "Isolating a component's styles"
+      ],
+      "correct": [0],
+      "explanation": "Modals, tooltips and dropdowns suffer from a parent's overflow: hidden and z-index. A portal moves them to the end of body, but events still bubble up the React tree rather than the DOM — that is the key detail interviewers ask about.",
+      "followUp": ["How is the equivalent implemented in React Native?"],
+      "difficulty": 2
+    },
+    {
+      "id": "web-010",
+      "topic": "react-web",
+      "type": "single",
+      "question": "What is code splitting and how is it done in React?",
+      "options": [
+        "Organising code into folders by feature",
+        "Breaking the bundle into parts loaded on demand — through a dynamic import() and React.lazy + Suspense",
+        "Extracting shared code into a separate monorepo package",
+        "Minifying and stripping unused code"
+      ],
+      "correct": [1],
+      "explanation": "Usually the split follows routes: the user downloads only the screen they opened. React.lazy takes a function with a dynamic import, and Suspense shows a fallback while it loads. Stripping unused code is tree shaking, a different technique.",
+      "followUp": ["How does code splitting relate to inline requires in React Native?"],
+      "difficulty": 1
+    },
+    {
+      "id": "web-011",
+      "topic": "react-web",
+      "type": "single",
+      "question": "What is XSS and how do you defend against it?",
+      "options": [
+        "Forging a request from another site; defended with CSRF tokens",
+        "Injecting someone else's script into the page; defended with output escaping, CSP, and care with dangerouslySetInnerHTML",
+        "Intercepting traffic; defended with HTTPS",
+        "Brute-forcing passwords; defended with rate limiting"
+      ],
+      "correct": [1],
+      "explanation": "React escapes everything it inserts into markup by default, so basic XSS is rare in it. Holes appear where escaping is bypassed: dangerouslySetInnerHTML, href=\"javascript:\", inserting a user-supplied URL into src. Forging a request from another site is CSRF, a separate attack.",
+      "followUp": ["What does a Content Security Policy do?"],
+      "difficulty": 2
+    },
+    {
+      "id": "web-012",
+      "topic": "react-web",
+      "type": "single",
+      "question": "How does Cache-Control: no-cache differ from no-store?",
+      "options": [
+        "They are synonyms",
+        "no-cache allows storing but requires revalidation before use; no-store forbids storing at all",
+        "no-cache only applies to images",
+        "no-store caches the response in memory but not on disk"
+      ],
+      "correct": [1],
+      "explanation": "The name no-cache is misleading: the response is stored, but before use it is validated through ETag or Last-Modified, and the server may answer 304. no-store is for genuinely sensitive data. For hashed static assets you use max-age of a year plus immutable.",
+      "followUp": ["How does caching work for static files with a hash in the name?"],
+      "difficulty": 3
+    },
+    {
+      "id": "web-013",
+      "topic": "react-web",
+      "type": "single",
+      "question": "What does HTTP/2 give you over HTTP/1.1?",
+      "options": [
+        "Traffic encryption",
+        "Multiplexing requests over one connection, header compression, prioritisation",
+        "WebSocket support",
+        "Automatic response caching"
+      ],
+      "correct": [1],
+      "explanation": "In HTTP/1.1 requests on a connection went one after another, hence head-of-line blocking and practices like sprites and bundle concatenation. HTTP/2 sends them in parallel over one connection, so splitting a bundle into many files became normal. Encryption comes from TLS, not from the protocol version.",
+      "followUp": ["Which HTTP/2 problem does QUIC solve in HTTP/3?"],
+      "difficulty": 2
+    },
+    {
+      "id": "web-014",
+      "topic": "react-web",
+      "type": "single",
+      "question": "What is a Service Worker?",
+      "options": [
+        "A background thread for heavy computation",
+        "A proxy between the app and the network: it intercepts requests and enables offline mode and background sync",
+        "A server-side process that serves SSR",
+        "A mechanism for isolating a component's styles"
+      ],
+      "correct": [1],
+      "explanation": "This is what PWAs are built on. It only works over HTTPS, has its own lifecycle (install → activate) and its own headache around updates: an old worker can keep serving a cached version. Heavy computation is a Web Worker, a different thing.",
+      "followUp": ["How does a Web Worker differ from a Service Worker?"],
+      "difficulty": 2
+    },
+    {
+      "id": "web-015",
+      "topic": "react-web",
+      "type": "single",
+      "question": "What is CSS specificity and how is it calculated?",
+      "options": [
+        "Declaration order: the last rule always wins",
+        "Selector weight: inline > id > class/attribute/pseudo-class > tag; on a tie the last one wins",
+        "The number of characters in the selector",
+        "How deeply the element is nested in the DOM"
+      ],
+      "correct": [1],
+      "explanation": "!important beats everything except another !important of higher specificity — and it is a sign that the style architecture has gone off the rails. Modern approaches (CSS modules, CSS-in-JS, utility classes) exist largely so you do not have to fight specificity.",
+      "followUp": ["How do CSS modules solve this, and why does the problem not exist in RN at all?"],
+      "difficulty": 1
+    },
+    {
+      "id": "web-016",
+      "topic": "react-web",
+      "type": "single",
+      "question": "What is accessibility (a11y) and what do you check first?",
+      "options": [
+        "Load speed for users on a slow connection",
+        "Semantic markup, keyboard navigation, contrast, alt text and labels, correct ARIA roles",
+        "Responsive layout across screen sizes",
+        "Support for old browsers"
+      ],
+      "correct": [1],
+      "explanation": "The basic rule: a native semantic element beats a div with an ARIA role. The practical minimum is to walk the page using only Tab and check contrast. React Native has a direct equivalent: accessibilityLabel, accessibilityRole and working with the screen reader.",
+      "followUp": ["How is this tested automatically, and why do automated tests not catch everything?"],
+      "difficulty": 2
+    },
+    {
+      "id": "web-017",
+      "topic": "react-web",
+      "type": "open",
+      "question": "A page takes a long time to open. How will you find the cause? Answer out loud.",
+      "explanation": "What is expected is a breakdown into stages, not a list of tips:\n\n1. Network or client? Look at TTFB — if it is high, the problem is the backend or the network, not React\n2. The waterfall in DevTools: what blocks, which resources are critical, are there needless round trips\n3. Bundle size and composition: an analyser, heavy dependencies, missing code splitting\n4. Rendering: the Performance tab, long tasks, too much work on the main thread\n5. Images and fonts — a frequent cause of poor LCP and CLS\n6. Measure before and after on a throttled network and a slow CPU\n\nA strong answer specifically notes that you must measure under real user conditions, not on a fast laptop with a local server.",
+      "followUp": ["Which of these applies equally to a mobile app?"],
+      "difficulty": 3
+    }
+  ]
+}
