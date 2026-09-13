@@ -1,0 +1,17 @@
+{
+  "topics": [
+    { "topic": "js-core",         "title": "JavaScript Core",                      "group": "Основы",     "order": 1 },
+    { "topic": "typescript",      "title": "TypeScript",                           "group": "Основы",     "order": 2 },
+    { "topic": "react",           "title": "React: ядро",                          "group": "React",      "order": 3 },
+    { "topic": "react-web",       "title": "React для веба и браузер",             "group": "React",      "order": 4 },
+    { "topic": "rn-architecture", "title": "React Native: архитектура",            "group": "React Native", "order": 5 },
+    { "topic": "rn-performance",  "title": "React Native: производительность",     "group": "React Native", "order": 6 },
+    { "topic": "rn-platform",     "title": "React Native: платформа и релизы",     "group": "React Native", "order": 7 },
+    { "topic": "node",            "title": "Node.js",                              "group": "Бэкенд",     "order": 8 },
+    { "topic": "cs-fundamentals", "title": "Основы computer science",              "group": "Общее",      "order": 9 },
+    { "topic": "algorithms",      "title": "Алгоритмы и лайвкодинг",               "group": "Общее",      "order": 10 },
+    { "topic": "system-design",   "title": "Системный дизайн мобильного приложения", "group": "Общее",    "order": 11 },
+    { "topic": "git-workflow",    "title": "Git и процессы разработки",            "group": "Общее",      "order": 12 },
+    { "topic": "behavioral",      "title": "Поведенческая секция",                 "group": "Общее",      "order": 13 }
+  ]
+}

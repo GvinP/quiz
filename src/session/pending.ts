@@ -124,9 +124,20 @@ export function createPendingStore(store: KeyValueStore): PendingStore {
 
     const encoded = encodePending(queued);
     queued = null;
-    // Слишком длинная очередь в один ключ не влезет — тогда просто не
-    // сохраняем: потерять возможность продолжить лучше, чем битый ключ.
-    if (new TextEncoder().encode(encoded).length > LIMIT) return writing;
+
+    // Очередь всех тем целиком — самая длинная из возможных. Пока она влезает
+    // в один ключ с запасом, но запас конечен: примерно на трёхстах вопросах
+    // сохранять станет нечего. Молча терять «Продолжить» нельзя, поэтому
+    // предупреждаем — и чинить это придётся разбиением на несколько ключей.
+    const size = new TextEncoder().encode(encoded).length;
+    if (size > LIMIT) {
+      console.warn(
+        `Сессия не сохранена: ${size} байт при лимите ${LIMIT}. ` +
+          'Банк вопросов перерос один ключ хранилища — нужно разбиение на части.',
+      );
+      return writing;
+    }
+
     return write(encoded);
   }
 

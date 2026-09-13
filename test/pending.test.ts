@@ -144,3 +144,26 @@ test('слишком длинная очередь не сохраняется �
   await store.flush();
   assert.equal(fake.data.size, 0);
 });
+
+test('предупреждение при переполнении, а не тихая потеря', async () => {
+  const fake = fakeStore();
+  const store = createPendingStore(fake.store);
+  const warnings: string[] = [];
+  const original = console.warn;
+  console.warn = (message: string) => warnings.push(message);
+
+  try {
+    store.save({
+      title: 'Повторение',
+      ids: Array.from({ length: 400 }, (_, i) => `cs-fundamentals-${String(i).padStart(3, '0')}`),
+      answers: [true],
+    });
+    await store.flush();
+  } finally {
+    console.warn = original;
+  }
+
+  assert.equal(fake.data.size, 0, 'битый ключ не записан');
+  assert.equal(warnings.length, 1);
+  assert.match(warnings[0], /не сохранена/i);
+});

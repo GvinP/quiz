@@ -7,6 +7,8 @@ import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const DATA_DIR = join(dirname(fileURLToPath(import.meta.url)), '..', 'data');
+/** Реестр тем — не тема: он задаёт только порядок и группировку на экране. */
+const REGISTRY = 'topics.json';
 const TYPES = ['single', 'multi', 'code-output', 'open'];
 const DIFFICULTIES = [1, 2, 3];
 const ID_PATTERN = /^[a-z0-9]+(-[a-z0-9]+)*$/;
@@ -108,7 +110,7 @@ function validateQuestion(file, topic, question, index) {
   }
 }
 
-function validateFile(file) {
+function validateFile(file, topics) {
   let parsed;
   try {
     parsed = JSON.parse(readFileSync(join(DATA_DIR, file), 'utf8'));
@@ -139,10 +141,75 @@ function validateFile(file) {
     validateQuestion(file, parsed.topic, question, index + 1);
   });
 
+  if (isNonEmptyString(parsed.topic)) topics.set(parsed.topic, parsed);
+
   return parsed.questions.length;
 }
 
-const files = readdirSync(DATA_DIR).filter((file) => file.endsWith('.json')).sort();
+/**
+ * Реестр необязателен: тема, которой в нём нет, всё равно попадёт в
+ * приложение — просто в конец списка. Ошибка только в обратную сторону,
+ * когда реестр ссылается на несуществующую тему или спорит с ней о названии.
+ */
+function validateRegistry(topics) {
+  let parsed;
+  try {
+    parsed = JSON.parse(readFileSync(join(DATA_DIR, REGISTRY), 'utf8'));
+  } catch (error) {
+    fail(REGISTRY, `не разбирается как JSON: ${error.message}`);
+    return;
+  }
+
+  if (!Array.isArray(parsed.topics)) {
+    fail(REGISTRY, 'нет массива topics');
+    return;
+  }
+
+  const seenTopics = new Set();
+  const seenOrders = new Map();
+
+  for (const [index, entry] of parsed.topics.entries()) {
+    const where = `${REGISTRY} → запись #${index + 1}${entry?.topic ? ` (${entry.topic})` : ''}`;
+
+    if (!isNonEmptyString(entry?.topic)) {
+      fail(where, 'нет поля topic');
+      continue;
+    }
+
+    if (seenTopics.has(entry.topic)) fail(where, `topic "${entry.topic}" указан дважды`);
+    seenTopics.add(entry.topic);
+
+    const file = topics.get(entry.topic);
+    if (!file) {
+      fail(where, `ссылается на "${entry.topic}", но файла data/${entry.topic}.json нет`);
+      continue;
+    }
+
+    if (!isNonEmptyString(entry.title)) {
+      fail(where, 'нет поля title');
+    } else if (entry.title !== file.title) {
+      fail(where, `title "${entry.title}" расходится с файлом: "${file.title}"`);
+    }
+
+    if (entry.group !== undefined && !isNonEmptyString(entry.group)) {
+      fail(where, 'group должен быть непустой строкой');
+    }
+
+    if (entry.order !== undefined) {
+      if (!Number.isInteger(entry.order)) {
+        fail(where, 'order должен быть целым числом');
+      } else if (seenOrders.has(entry.order)) {
+        fail(where, `order ${entry.order} уже занят темой "${seenOrders.get(entry.order)}"`);
+      } else {
+        seenOrders.set(entry.order, entry.topic);
+      }
+    }
+  }
+}
+
+const files = readdirSync(DATA_DIR)
+  .filter((file) => file.endsWith('.json') && file !== REGISTRY)
+  .sort();
 
 if (files.length === 0) {
   console.error('В /data нет ни одного файла тем.');
@@ -150,9 +217,13 @@ if (files.length === 0) {
 }
 
 let total = 0;
+const topics = new Map();
 for (const file of files) {
-  total += validateFile(file);
+  total += validateFile(file, topics);
 }
+
+const hasRegistry = readdirSync(DATA_DIR).includes(REGISTRY);
+if (hasRegistry) validateRegistry(topics);
 
 if (errors.length > 0) {
   console.error(`Данные не прошли проверку — ошибок: ${errors.length}\n`);
@@ -161,4 +232,11 @@ if (errors.length > 0) {
   process.exit(1);
 }
 
-console.log(`Проверено тем: ${files.length}, вопросов: ${total}. Ошибок нет.`);
+const unlisted = hasRegistry
+  ? files.length - JSON.parse(readFileSync(join(DATA_DIR, REGISTRY), 'utf8')).topics.length
+  : 0;
+
+console.log(
+  `Проверено тем: ${files.length}, вопросов: ${total}. Ошибок нет.` +
+    (unlisted > 0 ? ` Вне реестра: ${unlisted} — они встанут в конец списка.` : ''),
+);
