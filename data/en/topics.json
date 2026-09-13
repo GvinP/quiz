@@ -1,6 +1,34 @@
 {
   "topics": [
-    { "topic": "rn-architecture", "title": "React Native: Architecture",  "group": "React Native", "order": 5 },
-    { "topic": "rn-performance",  "title": "React Native: Performance",   "group": "React Native", "order": 6 }
+    {
+      "topic": "js-core",
+      "title": "JavaScript Core",
+      "group": "Fundamentals",
+      "order": 1
+    },
+    {
+      "topic": "react",
+      "title": "React: Core",
+      "group": "React",
+      "order": 3
+    },
+    {
+      "topic": "rn-architecture",
+      "title": "React Native: Architecture",
+      "group": "React Native",
+      "order": 5
+    },
+    {
+      "topic": "rn-performance",
+      "title": "React Native: Performance",
+      "group": "React Native",
+      "order": 6
+    },
+    {
+      "topic": "rn-platform",
+      "title": "React Native: Platform and Releases",
+      "group": "React Native",
+      "order": 7
+    }
   ]
 }

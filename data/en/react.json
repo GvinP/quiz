@@ -1,0 +1,299 @@
+{
+  "topic": "react",
+  "title": "React: Core",
+  "version": 1,
+  "questions": [
+    {
+      "id": "react-001",
+      "topic": "react",
+      "type": "single",
+      "question": "Which heuristics let React reconcile in O(n) instead of O(n³)?",
+      "options": [
+        "Caching the render output of every component",
+        "Different element types → the subtree is recreated; same type → reused; lists are compared by key",
+        "Comparing only changed props without walking the tree",
+        "Walking the tree in parallel across several threads"
+      ],
+      "correct": [1],
+      "explanation": "A full tree diff is O(n³), so React makes three assumptions: an element of a different type means a different subtree (state is lost), the same type means the same node with new props, and list items are identified by key.",
+      "followUp": ["Why does a component declared inside another component lose its state?"],
+      "difficulty": 1
+    },
+    {
+      "id": "react-002",
+      "topic": "react",
+      "type": "single",
+      "question": "Why is key={index} dangerous in a list that changes?",
+      "options": [
+        "Indexes are not unique across different lists",
+        "Inserting or removing at the front shifts the keys, and React reuses the wrong nodes",
+        "React does not support numeric keys",
+        "An index forces a full remount of the list"
+      ],
+      "correct": [1],
+      "explanation": "The item that was second becomes first — but key 1 now belongs to a different item. React decides it is the same node with new props: input state, animations and focus \"move\" to the neighbours. For a static list that never changes, an index is acceptable.",
+      "followUp": ["How does the same problem show up with cell recycling in FlashList?"],
+      "difficulty": 1
+    },
+    {
+      "id": "react-003",
+      "topic": "react",
+      "type": "single",
+      "question": "What is Fiber and why was it needed?",
+      "options": [
+        "New component syntax replacing classes",
+        "An architecture where the tree is a linked list of nodes and the traversal can be interrupted and resumed",
+        "A mechanism for caching render output",
+        "A separate thread for computing the virtual DOM"
+      ],
+      "correct": [1],
+      "explanation": "Interruptibility gives you update priorities and all of Concurrent React. Two phases: render (computing changes — interruptible, can run several times, which is why it must be pure) and commit (applying to the DOM or native views — synchronous and uninterruptible).",
+      "followUp": ["Why do components render twice in StrictMode during development?"],
+      "difficulty": 2
+    },
+    {
+      "id": "react-004",
+      "topic": "react",
+      "type": "multi",
+      "question": "What can cause a component to re-render?",
+      "options": [
+        "Its own state changed",
+        "Its parent re-rendered",
+        "The value of a Context it subscribes to changed",
+        "Its props changed"
+      ],
+      "correct": [0, 1, 2],
+      "explanation": "There are exactly three causes, plus a subscription to an external store. Changed props are not a cause of their own: props change because the parent re-rendered. This matters, because React.memo only stops re-renders coming from the parent and does nothing about Context.",
+      "followUp": ["How do you find the cause in practice?"],
+      "difficulty": 2
+    },
+    {
+      "id": "react-005",
+      "topic": "react",
+      "type": "code-output",
+      "question": "How much does the counter go up?\n\n```js\nconst [count, setCount] = useState(0);\n// inside a handler:\nsetCount(count + 1);\nsetCount(count + 1);\n```",
+      "options": ["By 2", "By 1", "By 0", "Depends on the React version"],
+      "correct": [1],
+      "explanation": "count in both calls is the value from the current render, so both compute the same thing. The updates are batched into a single render. With the functional form setCount(c => c + 1), calling it twice gives +2, because each call receives the actual previous value.",
+      "followUp": ["What changed about batching in React 18?"],
+      "difficulty": 1
+    },
+    {
+      "id": "react-006",
+      "topic": "react",
+      "type": "single",
+      "question": "Why can't hooks be called conditionally?",
+      "options": [
+        "A lint rule requires it, there is no technical reason",
+        "Hooks are stored on the fiber node as a list and matched by call order, not by name",
+        "A conditional call breaks garbage collection",
+        "React cannot tell which component a hook belongs to"
+      ],
+      "correct": [1],
+      "explanation": "Call order is a hook's only identifier. Skip one behind a condition and one hook's state arrives at another. \"Because the linter says so\" is a weak interview answer; talking about ordering immediately shows you understand the implementation.",
+      "followUp": ["Why does a duplicated React package cause \"Invalid hook call\"?"],
+      "difficulty": 2
+    },
+    {
+      "id": "react-007",
+      "topic": "react",
+      "type": "single",
+      "question": "How does useLayoutEffect differ from useEffect?",
+      "options": [
+        "It runs synchronously after commit, before the frame is painted",
+        "It runs before the component renders",
+        "It only works with the DOM and is unavailable in React Native",
+        "It does not need a dependency array"
+      ],
+      "correct": [0],
+      "explanation": "useEffect fires after paint — the user can see an intermediate frame. useLayoutEffect blocks paint, so it suits measurements and adjustments that must happen before the frame is shown. It exists in RN too and behaves the same. Do not overuse it: it delays the frame.",
+      "followUp": ["The classic case: measure an element and position a tooltip"],
+      "difficulty": 2
+    },
+    {
+      "id": "react-008",
+      "topic": "react",
+      "type": "single",
+      "question": "A user types quickly in a search box. An older response arrives after a newer one and overwrites the results. How do you fix it?",
+      "options": [
+        "Raise the debounce to one second",
+        "An ignore flag in the effect cleanup, or cancellation through AbortController",
+        "Wrap the request in useMemo",
+        "Move the request into useLayoutEffect"
+      ],
+      "correct": [1],
+      "explanation": "A classic request race. The effect cleanup runs before the next invocation — set a flag there and the stale response is simply ignored. Or cancel the request itself with AbortController. A debounce lowers the probability but does not remove the cause.",
+      "followUp": ["How does React Query solve this out of the box?"],
+      "difficulty": 2
+    },
+    {
+      "id": "react-009",
+      "topic": "react",
+      "type": "multi",
+      "question": "When is an effect not needed at all?",
+      "options": [
+        "A value derived from props and state — compute it during render",
+        "A reaction to a user action — put it in the event handler",
+        "Resetting state when a prop changes — often solved with key",
+        "Subscribing to an external store"
+      ],
+      "correct": [0, 1, 2],
+      "explanation": "useEffect is synchronisation with an external system, not a lifecycle hook. Derived values, reactions to events and state resets are all solved without it. Subscribing to an external source is exactly the legitimate case (or useSyncExternalStore).",
+      "followUp": ["Why is describing useEffect as \"the equivalent of componentDidMount\" a weak answer?"],
+      "difficulty": 3
+    },
+    {
+      "id": "react-010",
+      "topic": "react",
+      "type": "single",
+      "question": "When are useMemo and useCallback harmful?",
+      "options": [
+        "They never are, it is better to wrap everything",
+        "When everything gets wrapped: you pay memory and dependency comparison for no gain",
+        "Only in React Native; on the web they are free",
+        "When the dependencies are listed explicitly"
+      ],
+      "correct": [1],
+      "explanation": "They are not free: memory, dependency comparison and code to maintain. They help in three cases — an expensive computation, a stable reference for a memo component or for effect dependencies, and a stable Context value. A chain of memoisations where a single dependency is unstable runs slower than the original code.",
+      "followUp": ["What does the React Compiler change in React 19?"],
+      "difficulty": 2
+    },
+    {
+      "id": "react-011",
+      "topic": "react",
+      "type": "single",
+      "question": "A component is wrapped in React.memo but still re-renders. Most likely cause?",
+      "options": [
+        "memo only works with class components",
+        "A recreated object, function or JSX arrives as a prop — shallow comparison always says \"not equal\"",
+        "The second comparator argument was forgotten",
+        "The component contains useState"
+      ],
+      "correct": [1],
+      "explanation": "memo compares props shallowly. An inline function, an object literal, an array, a style literal or JSX in a prop is recreated on every render. The second common cause is a Context subscription: memo does not save you from that.",
+      "followUp": ["What is the right way to pass handlers into a memoised component?"],
+      "difficulty": 2
+    },
+    {
+      "id": "react-012",
+      "topic": "react",
+      "type": "single",
+      "question": "Why does Context cause extra re-renders, and how is that fixed?",
+      "options": [
+        "Context re-renders the whole app; the only cure is not using it",
+        "Every consumer re-renders regardless of which part of the value it reads; fixed by memoising value, splitting contexts and using an external store",
+        "Context causes no re-renders at all",
+        "The problem only exists in dev mode"
+      ],
+      "correct": [1],
+      "explanation": "Plus the classic mistake: value receives an object literal that is recreated on every render of the provider — then a re-render happens unconditionally. Splitting by change frequency (data separately, dispatcher separately) is often what helps most.",
+      "followUp": ["Why is Context dependency injection rather than a state manager?"],
+      "difficulty": 2
+    },
+    {
+      "id": "react-013",
+      "topic": "react",
+      "type": "single",
+      "question": "How does MobX avoid the extra re-render problem that Context has?",
+      "options": [
+        "It re-renders the whole app, just faster",
+        "observer subscribes to the specific observable fields the component actually read",
+        "It caches each component's render output",
+        "It uses a separate thread for reactions"
+      ],
+      "correct": [1],
+      "explanation": "Through Proxies, MobX sees exactly which properties a component read during render and subscribes it precisely. A field the component never read changes — it does not re-render. The flip side: reactivity is implicit, and \"why didn't it update\" is harder to debug than in Redux.",
+      "followUp": ["Compare MobX and Redux on substance, not on boilerplate volume"],
+      "difficulty": 3
+    },
+    {
+      "id": "react-014",
+      "topic": "react",
+      "type": "single",
+      "question": "How should state be divided up in an application?",
+      "options": [
+        "Everything in one global store — easier to find",
+        "Local by default; server data in its own layer with a cache; global UI state in a store; Context for stable dependencies",
+        "Everything in Context, no store needed",
+        "Everything local, exchanged through props"
+      ],
+      "correct": [1],
+      "explanation": "The key idea: a server cache and UI state are different things. Mixing them in one store produces half of all desync bugs. Server data needs deduplication, invalidation and retries — that is what a separate layer is for (React Query / RTK Query).",
+      "followUp": ["What exactly counts as \"server state\"?"],
+      "difficulty": 2
+    },
+    {
+      "id": "react-015",
+      "topic": "react",
+      "type": "multi",
+      "question": "What does an Error Boundary NOT catch?",
+      "options": [
+        "Errors in event handlers",
+        "Errors in asynchronous code and promises",
+        "Errors in the boundary itself",
+        "Render errors in a child component"
+      ],
+      "correct": [0, 1, 2],
+      "explanation": "A boundary only catches render-phase errors in the subtree below it. In practice: put the boundary at the level of a screen or a block rather than the whole app — so one block fails, not everything; report the error to Sentry; show a screen with a retry.",
+      "followUp": ["How do you catch errors in handlers and async code?"],
+      "difficulty": 2
+    },
+    {
+      "id": "react-016",
+      "topic": "react",
+      "type": "single",
+      "question": "What is useTransition for?",
+      "options": [
+        "Animating transitions between screens",
+        "Marking an update as non-urgent: urgent input stays responsive while a heavy recomputation runs in the background",
+        "Deferring an effect until render finishes",
+        "Merging several setState calls into one"
+      ],
+      "correct": [1],
+      "explanation": "You wrap the non-urgent update and get isPending back. React can interrupt that work for something urgent — typing in a field, for example. useDeferredValue solves the same problem from the value side: it shows the previous one while the new one is being computed.",
+      "followUp": ["Does this work in React Native?"],
+      "difficulty": 2
+    },
+    {
+      "id": "react-017",
+      "topic": "react",
+      "type": "multi",
+      "question": "What arrived in React 19?",
+      "options": [
+        "use() — reading a promise or a context, conditionally included",
+        "useOptimistic for optimistic UI",
+        "ref as a regular prop, without forwardRef",
+        "Hooks instead of class components"
+      ],
+      "correct": [0, 1, 2],
+      "explanation": "Plus Actions with useActionState and useFormStatus, improved hydration, and the React Compiler, which removes the need for manual memoisation. Hooks are React 16.8, not 19. In an interview, \"I haven't been following\" sounds weak: better to say honestly that production is still on 18, and then say what you know about 19.",
+      "followUp": ["Which of these is actually usable in React Native today?"],
+      "difficulty": 2
+    },
+    {
+      "id": "react-018",
+      "topic": "react",
+      "type": "single",
+      "question": "What does \"custom hooks reuse logic, not state\" mean?",
+      "options": [
+        "A hook cannot be called in two components at once",
+        "Every call to a hook creates its own instance of state — two components using useCounter() do not share a counter",
+        "State inside a hook is read-only",
+        "Custom hooks cannot use useState"
+      ],
+      "correct": [1],
+      "explanation": "A common misconception is that a hook is shared storage. Genuinely shared state needs Context, an external store, or lifting state up. A hook reuses the code, not the data.",
+      "followUp": ["How do you test a custom hook?"],
+      "difficulty": 1
+    },
+    {
+      "id": "react-019",
+      "topic": "react",
+      "type": "open",
+      "question": "\"The screen became slow to respond to input. What do you do?\" Answer out loud.",
+      "explanation": "A method is expected:\n\n1. Reproduce and clarify — on every device, at what data volume, since when\n2. Profiler with \"why did this render\" on: what re-renders on every keystroke\n3. Separate extra renders from an expensive render — these are different problems\n4. Extra renders: unstable props, a broad Context, state lifted too high\n5. Expensive render: heavy computation in render, a long list without virtualisation → useMemo, virtualisation, useDeferredValue\n6. Measure before and after, and lock it in\n\nA strong answer specifically mentions that a controlled input whose state lives in a distant parent re-renders the subtree on every character — and that is most often the actual cause.",
+      "followUp": ["When is pushing state down the better move than memoising?"],
+      "difficulty": 3
+    }
+  ]
+}

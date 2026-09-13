@@ -1,0 +1,330 @@
+{
+  "topic": "js-core",
+  "title": "JavaScript Core",
+  "version": 1,
+  "questions": [
+    {
+      "id": "js-core-001",
+      "topic": "js-core",
+      "type": "code-output",
+      "question": "What does this print?\n\n```js\nconsole.log('1');\nsetTimeout(() => console.log('2'), 0);\nPromise.resolve().then(() => console.log('3'));\nqueueMicrotask(() => console.log('4'));\nconsole.log('5');\n```",
+      "options": ["1 2 3 4 5", "1 5 3 4 2", "1 5 2 3 4", "1 5 4 3 2"],
+      "correct": [1],
+      "explanation": "Synchronous code first (1, 5). Then microtasks in the order they were queued (3, 4) — Promise.then and queueMicrotask share one queue. Then the macrotask (2). The key point: the microtask queue is drained completely, including tasks added along the way, and only then does the next macrotask run.",
+      "followUp": ["What happens if a microtask recursively schedules another microtask?"],
+      "difficulty": 1
+    },
+    {
+      "id": "js-core-002",
+      "topic": "js-core",
+      "type": "single",
+      "question": "Why does setTimeout(fn, 0) not run immediately?",
+      "options": [
+        "The engine forcibly waits exactly 16 ms to sync with the frame",
+        "The callback goes into the macrotask queue and waits for the stack and the entire microtask queue to drain",
+        "Zero is automatically replaced with 100 ms",
+        "setTimeout always runs after every promise in the app has settled"
+      ],
+      "correct": [1],
+      "explanation": "It is a macrotask: it runs only once the stack is empty and the microtask queue is exhausted. On top of that, the browser spec mandates a minimum delay of about 4 ms for nested timers.",
+      "followUp": ["How is this different from setImmediate in Node?"],
+      "difficulty": 1
+    },
+    {
+      "id": "js-core-003",
+      "topic": "js-core",
+      "type": "single",
+      "question": "What is the TDZ?",
+      "options": [
+        "The span from the start of a block to the let/const declaration, where access throws a ReferenceError",
+        "The memory region variables land in before garbage collection",
+        "The mechanism that forbids reassigning a const",
+        "A mode where var behaves like let"
+      ],
+      "correct": [0],
+      "explanation": "let and const are hoisted but not initialised. From the start of the block to the declaration the variable exists but is unreachable — that is the Temporal Dead Zone. A common interview slip is saying \"let is not hoisted\": it is, it just sits in the TDZ.",
+      "followUp": ["How are function declarations and function expressions hoisted?"],
+      "difficulty": 2
+    },
+    {
+      "id": "js-core-004",
+      "topic": "js-core",
+      "type": "code-output",
+      "question": "What does this print?\n\n```js\nfor (var i = 0; i < 3; i++) {\n  setTimeout(() => console.log(i));\n}\n```",
+      "options": ["0 1 2", "3 3 3", "0 0 0", "2 2 2"],
+      "correct": [1],
+      "explanation": "var has function scope — there is a single variable for the whole loop. By the time the callbacks run the loop has finished and i is 3. With let the output would be 0 1 2, because each iteration gets its own binding.",
+      "followUp": ["How do you fix this with var, without changing the declaration?"],
+      "difficulty": 1
+    },
+    {
+      "id": "js-core-005",
+      "topic": "js-core",
+      "type": "single",
+      "question": "What is a closure?",
+      "options": [
+        "A function declared inside another function",
+        "A function together with the lexical environment in which it was created",
+        "A way to hide variables using a module",
+        "A garbage collection mechanism for functions"
+      ],
+      "correct": [1],
+      "explanation": "A function remembers the variables of the scope where it was declared, not where it is called from, and that environment lives as long as the function does. Nesting is not the definition; the captured environment is. In practice: private state, debounce/throttle/memoisation, and every hook in React.",
+      "followUp": ["How can a closure cause a memory leak?"],
+      "difficulty": 1
+    },
+    {
+      "id": "js-core-006",
+      "topic": "js-core",
+      "type": "single",
+      "question": "A useEffect with an empty dependency array reads a stale state value. What is this called and how is it fixed?",
+      "options": [
+        "A race condition — fixed with AbortController",
+        "A stale closure — fixed with a functional update, a ref, or honest dependencies",
+        "A memory leak — fixed with a cleanup function",
+        "Batching — fixed with flushSync"
+      ],
+      "correct": [1],
+      "explanation": "The effect closed over the values of the first render and sees them forever. Options: setState(prev => ...) instead of reading the current value, useRef for an up-to-date value, or listing the real dependencies and letting the effect be recreated.",
+      "followUp": ["Why does the react-hooks/exhaustive-deps lint rule complain about exactly this?"],
+      "difficulty": 2
+    },
+    {
+      "id": "js-core-007",
+      "topic": "js-core",
+      "type": "single",
+      "question": "What determines `this` in a regular function?",
+      "options": [
+        "Where the function is declared",
+        "How the function is called",
+        "Always the object the function sits in",
+        "The value passed to the module constructor"
+      ],
+      "correct": [1],
+      "explanation": "Priority: new → explicit binding (call/apply/bind) → a call through a dot (obj.method()) → a plain call (undefined in strict mode, globalThis otherwise). Arrow functions fall outside this list: they have no `this` of their own, they take it lexically, and bind has no effect on them.",
+      "followUp": ["What happens with setTimeout(obj.method, 0)?"],
+      "difficulty": 1
+    },
+    {
+      "id": "js-core-008",
+      "topic": "js-core",
+      "type": "single",
+      "question": "Which relation is correct?",
+      "options": [
+        "instance.prototype === Constructor.__proto__",
+        "instance.__proto__ === Constructor.prototype",
+        "instance.prototype === Constructor.prototype",
+        "Constructor.__proto__ === Constructor.prototype"
+      ],
+      "correct": [1],
+      "explanation": "prototype is a property of the constructor function: the object that will become the prototype of its instances. __proto__ is an object's own reference to its prototype. Classes are syntactic sugar over this: methods live on Class.prototype.",
+      "followUp": ["What does the new operator do, step by step?"],
+      "difficulty": 2
+    },
+    {
+      "id": "js-core-009",
+      "topic": "js-core",
+      "type": "single",
+      "question": "What does new do under the hood?",
+      "options": [
+        "Clones the prototype object and returns the copy",
+        "Creates an empty object, sets Fn.prototype as its prototype, calls Fn with that `this`, and returns the object",
+        "Calls the constructor and wraps the result in a Proxy",
+        "Reserves memory for the object and triggers the garbage collector"
+      ],
+      "correct": [1],
+      "explanation": "Four steps: create an empty object, link it to Fn.prototype, call Fn with that `this`, return the object — unless the constructor explicitly returned an object of its own.",
+      "followUp": ["What is returned if the constructor returns a primitive? And an object?"],
+      "difficulty": 2
+    },
+    {
+      "id": "js-core-010",
+      "topic": "js-core",
+      "type": "single",
+      "question": "What does the spread { ...obj } do?",
+      "options": [
+        "A deep copy including every nested object",
+        "A shallow copy: nested objects stay shared by reference",
+        "A copy of enumerable methods only",
+        "A copy including the prototype"
+      ],
+      "correct": [1],
+      "explanation": "Only the top level is copied. Nested objects and arrays remain the same references — a change through the copy affects the original. The prototype is not copied either.",
+      "followUp": ["Why is structuredClone better than JSON.parse(JSON.stringify())?"],
+      "difficulty": 1
+    },
+    {
+      "id": "js-core-011",
+      "topic": "js-core",
+      "type": "multi",
+      "question": "What is lost when cloning with JSON.parse(JSON.stringify(obj))?",
+      "options": [
+        "Functions and undefined",
+        "Symbols in keys and values",
+        "Date objects turn into strings",
+        "Numbers lose precision"
+      ],
+      "correct": [0, 1, 2],
+      "explanation": "Plus it throws on circular references and loses Map/Set/class prototypes. structuredClone handles cycles, Date, Map, Set and ArrayBuffer, but does not copy functions and also loses class prototypes. Numeric precision does not suffer during serialisation.",
+      "followUp": ["How would you write a deep clone that supports circular references?"],
+      "difficulty": 2
+    },
+    {
+      "id": "js-core-012",
+      "topic": "js-core",
+      "type": "single",
+      "question": "Five blocks of a screen load in parallel and one of them is optional. Which combinator do you pick?",
+      "options": [
+        "Promise.all — it is the fastest",
+        "Promise.allSettled — otherwise one failed request takes down the whole screen",
+        "Promise.race — it returns the first block that is ready",
+        "Promise.any — it ignores errors automatically"
+      ],
+      "correct": [1],
+      "explanation": "all is fail-fast: the first rejection takes everything down. allSettled waits for all of them and returns an array of {status, value|reason}, never rejecting — so you can render what loaded and hide the block that failed.",
+      "followUp": [
+        "How is race different from any?",
+        "How do you implement a request timeout?"
+      ],
+      "difficulty": 2
+    },
+    {
+      "id": "js-core-013",
+      "topic": "js-core",
+      "type": "single",
+      "question": "Writing Promise.all by hand, a candidate collects results with results.push(value). What is the bug?",
+      "options": [
+        "The array will be empty, because push is asynchronous",
+        "Results end up ordered by completion time rather than by the input array",
+        "The promises never start executing",
+        "An error in one promise will not be caught"
+      ],
+      "correct": [1],
+      "explanation": "The contract of Promise.all is to preserve the order of the input array. Results have to be written by index (results[i] = value) and completion tracked with a counter. That is exactly what this exercise is testing.",
+      "followUp": ["What should happen if an empty array comes in?"],
+      "difficulty": 2
+    },
+    {
+      "id": "js-core-014",
+      "topic": "js-core",
+      "type": "single",
+      "question": "What is wrong with this code?\n\n```js\nfor (const id of ids) {\n  const user = await fetchUser(id);\n  users.push(user);\n}\n```",
+      "options": [
+        "The requests run sequentially when they could run in parallel",
+        "await inside for...of does not work",
+        "The users array will be filled in random order",
+        "An error in one request will not break the loop"
+      ],
+      "correct": [0],
+      "explanation": "Ten requests at 200 ms each take 2 seconds instead of 200 ms. The right form is await Promise.all(ids.map(fetchUser)). With a caveat — if there are hundreds of requests you need a pool with a concurrency limit. And if each one depends on the previous, the original loop is correct, and you should be able to say so.",
+      "followUp": ["How would you write mapWithConcurrency(items, fn, limit)?"],
+      "difficulty": 2
+    },
+    {
+      "id": "js-core-015",
+      "topic": "js-core",
+      "type": "code-output",
+      "question": "What does this print?\n\n```js\nasync function f() {\n  console.log('1');\n  await null;\n  console.log('2');\n}\nf();\nconsole.log('3');\n```",
+      "options": ["1 2 3", "1 3 2", "3 1 2", "1 2, then 3 on the next tick"],
+      "correct": [1],
+      "explanation": "await defers the continuation of the function into a microtask even when its operand is not a promise. The code before await runs synchronously, so 1 comes first; then control returns to the caller (3); then the microtask (2).",
+      "followUp": ["How does this relate to an async function always returning a promise?"],
+      "difficulty": 2
+    },
+    {
+      "id": "js-core-016",
+      "topic": "js-core",
+      "type": "single",
+      "question": "What are null == undefined and null == 0?",
+      "options": ["true and true", "true and false", "false and false", "false and true"],
+      "correct": [1],
+      "explanation": "Under loose comparison null and undefined equal each other and nothing else — null is not coerced to a number here. Separately, remember NaN !== NaN: compare with Number.isNaN or Object.is.",
+      "followUp": ["Walk through step by step why [] == false is true"],
+      "difficulty": 2
+    },
+    {
+      "id": "js-core-017",
+      "topic": "js-core",
+      "type": "single",
+      "question": "What is the bug in const count = props.count || 10?",
+      "options": [
+        "A valid 0 gets replaced with 10, because || fires on any falsy value",
+        "undefined will not be handled",
+        "The value is recomputed on every render",
+        "There is no bug, this is the correct way to set a default"
+      ],
+      "correct": [0],
+      "explanation": "|| fires on 0, '', false and NaN. For a default you want ??, which only reacts to null and undefined. Mixing ?? and || without parentheses is not allowed — the spec makes it a syntax error.",
+      "followUp": ["Where else does this bug show up most often? (an empty string in a form)"],
+      "difficulty": 1
+    },
+    {
+      "id": "js-core-018",
+      "topic": "js-core",
+      "type": "single",
+      "question": "How does garbage collection work in V8?",
+      "options": [
+        "Reference counting: an object is freed when the counter reaches zero",
+        "Mark-and-sweep: walk from the roots along references, everything unmarked is freed",
+        "On a timer, unused memory is released every N seconds",
+        "Manually, through delete and nulling out variables"
+      ],
+      "correct": [1],
+      "explanation": "The engine walks from the roots (the global object, the call stack) along references and marks reachable objects, collecting the rest. Reference counting is not used as the main mechanism — it breaks on circular references. Saying \"it counts references\" in an interview is an outdated answer.",
+      "followUp": ["What are the typical causes of leaks in an SPA and in RN?"],
+      "difficulty": 2
+    },
+    {
+      "id": "js-core-019",
+      "topic": "js-core",
+      "type": "single",
+      "question": "What is WeakMap for?",
+      "options": [
+        "It is a Map with a size limit",
+        "Keys can only be objects, and a reference from a WeakMap does not prevent garbage collection",
+        "It is faster than a regular Map at large volumes",
+        "It allows primitives as keys"
+      ],
+      "correct": [1],
+      "explanation": "The references are weak: if nothing else refers to the key object, it is collected and the WeakMap entry disappears with it. Use cases: private data for an object, a metadata cache, marking visited nodes when walking a structure with cycles. A WeakMap is not iterable and has no size.",
+      "followUp": ["How do you use a WeakMap in a deep clone to handle cycles?"],
+      "difficulty": 2
+    },
+    {
+      "id": "js-core-020",
+      "topic": "js-core",
+      "type": "single",
+      "question": "Why is 0.1 + 0.2 !== 0.3?",
+      "options": [
+        "A rounding error when printing to the console",
+        "Numbers are IEEE 754 doubles, and decimal fractions have no exact binary representation",
+        "JavaScript stores all numbers as strings",
+        "It is a V8 bug, fixed in newer versions"
+      ],
+      "correct": [1],
+      "explanation": "Compare against an epsilon (Math.abs(a - b) < Number.EPSILON), and for money store integers in the smallest unit (cents) or use a decimal library. In an app with prices and discounts this is not theory but a direct source of bugs.",
+      "followUp": ["What is BigInt for, and what is Number.MAX_SAFE_INTEGER?"],
+      "difficulty": 1
+    },
+    {
+      "id": "js-core-021",
+      "topic": "js-core",
+      "type": "single",
+      "question": "What is the reactivity of MobX 5+ and Vue 3 built on?",
+      "options": ["Object.defineProperty", "Proxy", "Getters on the prototype", "Comparing state snapshots"],
+      "correct": [1],
+      "explanation": "Proxy intercepts operations on an object through traps (get, set, has): reading a property records a dependency, writing one triggers a reaction. Reflect gives a functional API for the same operations and is handy inside traps for default behaviour. MobX 4 used Object.defineProperty — hence its limitations with dynamic keys and arrays.",
+      "followUp": ["How does observer know which fields a component actually read?"],
+      "difficulty": 3
+    },
+    {
+      "id": "js-core-022",
+      "topic": "js-core",
+      "type": "open",
+      "question": "Write throttle with trailing-call support. Explain how it differs from debounce.",
+      "explanation": "Debounce postpones the call until events stop for N ms — good for search-as-you-type. Throttle lets through at most one call per N ms — good for scroll and resize.\n\n```js\nfunction throttle(fn, ms) {\n  let last = 0;\n  let timer = null;\n  return (...args) => {\n    const now = Date.now();\n    const rest = ms - (now - last);\n    if (rest <= 0) {\n      clearTimeout(timer);\n      timer = null;\n      last = now;\n      fn(...args);\n    } else if (!timer) {\n      timer = setTimeout(() => {\n        last = Date.now();\n        timer = null;\n        fn(...args);\n      }, rest);\n    }\n  };\n}\n```\n\nWithout the trailing call the last event is lost — you will almost always be asked about that.",
+      "followUp": ["What breaks if you use this directly in a React component without useRef?"],
+      "difficulty": 3
+    }
+  ]
+}
