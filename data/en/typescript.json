@@ -1,0 +1,256 @@
+{
+  "topic": "typescript",
+  "title": "TypeScript",
+  "version": 1,
+  "questions": [
+    {
+      "id": "ts-001",
+      "topic": "typescript",
+      "type": "single",
+      "question": "What can an interface do that a type cannot?",
+      "options": [
+        "Extend another type",
+        "Declaration merging — two declarations with the same name are merged",
+        "Describe functions and their signatures",
+        "Be used in generics"
+      ],
+      "correct": [1],
+      "explanation": "Merging is the only substantial difference, and it is exactly what module augmentation needs: typing RootParamList in react-navigation, extending a theme, adding to the types of a third-party library. type, in turn, can do unions, intersections, mapped and conditional types, tuples and primitives.",
+      "followUp": ["Where in an RN project do you actually end up using merging?"],
+      "difficulty": 1
+    },
+    {
+      "id": "ts-002",
+      "topic": "typescript",
+      "type": "single",
+      "question": "What is structural typing?",
+      "options": [
+        "Types are compared by name: two types with the same shape are incompatible",
+        "Types are compared by shape: any object with the required fields fits",
+        "Types are inferred automatically from values",
+        "Interfaces must be declared before use"
+      ],
+      "correct": [1],
+      "explanation": "TS compares by shape, not by name — unlike nominal typing in Java or C#. The consequence: UserId and OrderId, both string, are interchangeable. The cure is branding: type UserId = string & { readonly __brand: 'UserId' }.",
+      "followUp": ["What is the excess property check, and why does a literal complain while a variable does not?"],
+      "difficulty": 2
+    },
+    {
+      "id": "ts-003",
+      "topic": "typescript",
+      "type": "single",
+      "question": "Why is unknown better than any in catch (e)?",
+      "options": [
+        "unknown is faster for the compiler to check",
+        "unknown forces you to narrow before use, while any switches checking off and spreads through everything around it",
+        "any cannot be used in catch at all",
+        "There is no difference, they are synonyms"
+      ],
+      "correct": [1],
+      "explanation": "unknown is the safe top of the hierarchy: anything can be assigned to it, but it can only be used after narrowing via typeof, instanceof or a type guard. any is a hole in the type system that propagates through the code. With useUnknownInCatchVariables (part of strict), unknown in catch became the default.",
+      "followUp": ["What is the correct way to get message out of a caught error?"],
+      "difficulty": 1
+    },
+    {
+      "id": "ts-004",
+      "topic": "typescript",
+      "type": "single",
+      "question": "Why write const _exhaustive: never = value in a switch default branch?",
+      "options": [
+        "To silence a lint warning about unreachable code",
+        "So the compiler fails if a new variant is added to the union and the branch is missing",
+        "To force an exception at runtime",
+        "So TypeScript can infer the return type"
+      ],
+      "correct": [1],
+      "explanation": "If every variant is handled, the type narrows to never in default and the assignment compiles. Add a new variant to the union and the type is no longer never, so the build fails the moment it is added rather than in production. The most practical technique for working with discriminated unions.",
+      "followUp": ["How would you model screen state as a discriminated union?"],
+      "difficulty": 2
+    },
+    {
+      "id": "ts-005",
+      "topic": "typescript",
+      "type": "single",
+      "question": "How do you type a function that returns an object's field by key?",
+      "options": [
+        "function get<T>(obj: T, key: string): any",
+        "function get<T, K extends keyof T>(obj: T, key: K): T[K]",
+        "function get<T>(obj: T, key: keyof T): T",
+        "function get(obj: object, key: string): unknown"
+      ],
+      "correct": [1],
+      "explanation": "K extends keyof T constrains the key to the object's real fields, and the indexed access T[K] gives the exact type of that particular field. The variant with keyof T and no second parameter would return a union of all field types, losing precision.",
+      "followUp": ["What is T[keyof T] and when do you need it?"],
+      "difficulty": 2
+    },
+    {
+      "id": "ts-006",
+      "topic": "typescript",
+      "type": "single",
+      "question": "Which implementation of Omit is correct?",
+      "options": [
+        "type MyOmit<T, K> = { [P in K]: T[P] }",
+        "type MyOmit<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>",
+        "type MyOmit<T, K> = T extends K ? never : T",
+        "type MyOmit<T, K extends keyof T> = Partial<Pick<T, K>>"
+      ],
+      "correct": [1],
+      "explanation": "Exclude removes keys from the keyof T union, and Pick assembles an object from what is left. Worth knowing the others by heart too: Partial<T> = { [K in keyof T]?: T[K] }, ReturnType<T> = T extends (...a: any[]) => infer R ? R : never.",
+      "followUp": ["Write DeepPartial<T> recursively"],
+      "difficulty": 2
+    },
+    {
+      "id": "ts-007",
+      "topic": "typescript",
+      "type": "single",
+      "question": "What does infer do in a conditional type?",
+      "options": [
+        "Widens a type",
+        "Declares a type variable inside the condition and extracts part of a type",
+        "Infers a variable's type from its value",
+        "Turns off type checking in that branch"
+      ],
+      "correct": [1],
+      "explanation": "T extends Promise<infer U> ? U : T pulls out the type inside a promise. An important property of conditional types: they distribute over unions, applying to each member separately. You turn that off by wrapping in a tuple: [T] extends [U].",
+      "followUp": ["How would you write UnwrapPromise<T> and Flatten<T>?"],
+      "difficulty": 3
+    },
+    {
+      "id": "ts-008",
+      "topic": "typescript",
+      "type": "single",
+      "question": "Why describe screen state as a discriminated union rather than a set of boolean flags?",
+      "options": [
+        "It is fewer lines of code",
+        "Invalid combinations become unrepresentable, and the data is only reachable in its own branch",
+        "Boolean flags serialise worse",
+        "TypeScript does not support several booleans in one type"
+      ],
+      "correct": [1],
+      "explanation": "With four flags — isLoading/isError/hasData/isEmpty — half of the 16 combinations are invalid and have to be guarded by hand. The union {status:'loading'} | {status:'success', data} | {status:'error', error} makes invalid states non-existent, and data is only reachable where it actually exists.",
+      "followUp": ["How does this relate to state machines?"],
+      "difficulty": 2
+    },
+    {
+      "id": "ts-009",
+      "topic": "typescript",
+      "type": "single",
+      "question": "What is dangerous about a user-defined type guard function isUser(x: unknown): x is User?",
+      "options": [
+        "It slows the code down",
+        "The compiler takes the predicate on trust — there may be no real check at all",
+        "It does not work with generics",
+        "It requires an as inside"
+      ],
+      "correct": [1],
+      "explanation": "TS does not verify that the function body actually validates the object. A predicate is as much of a promise as an as. So at the boundaries of the app (API responses, JSON.parse, data from storage, deep links) you need runtime validation: zod and the like, where the type is derived from the schema via z.infer.",
+      "followUp": ["What is an assertion function and how does it differ from a predicate?"],
+      "difficulty": 2
+    },
+    {
+      "id": "ts-010",
+      "topic": "typescript",
+      "type": "single",
+      "question": "How does satisfies differ from a type annotation with :?",
+      "options": [
+        "It does not, they are synonyms",
+        "It checks conformance to a type without widening the value's inferred type",
+        "It only works with array literals",
+        "It disables strict checking for that expression"
+      ],
+      "correct": [1],
+      "explanation": "const routes = {...} satisfies Record<string, string> checks the structure but keeps the exact literal keys — keyof typeof routes stays 'home' | 'product'. With the annotation : Record<string, string> that precision would be lost.",
+      "followUp": ["Where this helps: configs, themes, route maps, analytics events"],
+      "difficulty": 3
+    },
+    {
+      "id": "ts-011",
+      "topic": "typescript",
+      "type": "single",
+      "question": "Why do React Native projects usually prefer literal unions over enum?",
+      "options": [
+        "enum is not supported in React Native",
+        "enum generates a runtime object and extra code, and const enum sits badly with isolated transpilation",
+        "A literal union is faster at runtime",
+        "enum cannot be used in component props"
+      ],
+      "correct": [1],
+      "explanation": "A regular enum leaves an object in the bundle, and numeric ones have reverse mapping and leaky checking (any number passes). const enum is inlined but breaks under isolatedModules — which is exactly how Babel and Metro build. A literal union, or an object with as const, leaves no runtime trace and infers better.",
+      "followUp": ["How do you get both the type and the runtime values without an enum?"],
+      "difficulty": 2
+    },
+    {
+      "id": "ts-012",
+      "topic": "typescript",
+      "type": "single",
+      "question": "What does the noUncheckedIndexedAccess flag do?",
+      "options": [
+        "Forbids indexing into an array",
+        "Makes arr[0] have the type T | undefined",
+        "Checks array bounds at runtime",
+        "Requires an explicit type annotation on every array"
+      ],
+      "correct": [1],
+      "explanation": "The flag reflects reality honestly: an array may be empty, and an object may not have the requested key. It is not part of strict and is enabled separately. Adopting it causes a lot of edits, but it catches a whole class of undefined bugs.",
+      "followUp": ["What else is in strict, and where do you start migrating a large codebase?"],
+      "difficulty": 3
+    },
+    {
+      "id": "ts-013",
+      "topic": "typescript",
+      "type": "single",
+      "question": "Why is @ts-expect-error better than @ts-ignore when turning strict on gradually?",
+      "options": [
+        "It suppresses more kinds of errors",
+        "It becomes an error itself once the suppressed problem is gone — the comment cannot go stale",
+        "It only works in tests",
+        "It affects the IDE but not the build"
+      ],
+      "correct": [1],
+      "explanation": "@ts-ignore lives on silently, long after the error under it disappeared. @ts-expect-error requires the error to exist — as soon as the code is fixed the comment is flagged as unnecessary and gets removed. For a migration that is the difference between temporary debt and permanent debt.",
+      "followUp": ["What other ways are there to enable strict gradually: one flag at a time, a separate tsconfig for new modules"],
+      "difficulty": 2
+    },
+    {
+      "id": "ts-014",
+      "topic": "typescript",
+      "type": "single",
+      "question": "How do you type a custom hook so it returns a tuple rather than an array of unions?",
+      "options": [
+        "Annotate the return value as any[]",
+        "Return [value, setValue] as const, or state the tuple type explicitly",
+        "Use Array<T> in the signature",
+        "Wrap the result in Object.freeze"
+      ],
+      "correct": [1],
+      "explanation": "Without as const, TS infers (T | ((v: T) => void))[] — an array of a union, and destructuring loses the types. as const pins a tuple with exact positions. Rule of thumb: two or three values — a tuple; more — an object with named fields.",
+      "followUp": ["How do you type a generic list component?"],
+      "difficulty": 2
+    },
+    {
+      "id": "ts-015",
+      "topic": "typescript",
+      "type": "multi",
+      "question": "Which ways of \"lying\" to the compiler exist in TypeScript?",
+      "options": [
+        "as — a type assertion with no check",
+        "any and unsafe x is T predicates",
+        "! — the non-null assertion",
+        "Generics constrained with extends"
+      ],
+      "correct": [0, 1, 2],
+      "explanation": "Plus wrong types in third-party @types/* packages. The main point for an interview: types are a compile-time promise, and nothing of them remains at runtime. Anything coming from outside has to be validated. Constrained generics, by contrast, strengthen checking.",
+      "followUp": ["Where are the boundaries in a mobile app that require validation?"],
+      "difficulty": 1
+    },
+    {
+      "id": "ts-016",
+      "topic": "typescript",
+      "type": "open",
+      "question": "How would you introduce strict mode into a large existing project? Answer out loud.",
+      "explanation": "A process is expected, not \"turned it on and fixed things\".\n\n1. Not all at once but one flag at a time, starting with noImplicitAny and strictNullChecks — they carry most of the benefit\n2. A separate, stricter tsconfig for new modules: new code is written correctly from the start\n3. Silence existing errors with @ts-expect-error and a comment, not @ts-ignore\n4. Stop the debt from growing in CI: the number of suppressions must not increase\n5. Fix module by module alongside planned work, not as a separate \"refactoring sprint\"\n\nA strong answer mentions that this is a trade-off: strictness costs the team time, and you turn it on for a specific pain (undefined bugs, refactoring blind) rather than for its own sake.",
+      "followUp": ["How do you measure that it got better?"],
+      "difficulty": 3
+    }
+  ]
+}

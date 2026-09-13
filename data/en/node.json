@@ -1,0 +1,240 @@
+{
+  "topic": "node",
+  "title": "Node.js",
+  "version": 1,
+  "questions": [
+    {
+      "id": "node-001",
+      "topic": "node",
+      "type": "single",
+      "question": "In what order do the main event loop phases run in Node?",
+      "options": [
+        "poll → timers → check → close",
+        "timers → pending callbacks → poll → check → close callbacks",
+        "check → timers → poll → close",
+        "timers → poll → close → check"
+      ],
+      "correct": [1],
+      "explanation": "setTimeout lives in timers, I/O in poll (where the loop can block waiting), setImmediate in check. Microtasks are drained between phases, and process.nextTick has its own queue with priority even over promises.",
+      "followUp": ["How does this differ from the browser event loop?"],
+      "difficulty": 2
+    },
+    {
+      "id": "node-002",
+      "topic": "node",
+      "type": "single",
+      "question": "Inside an I/O callback, which runs first: setTimeout(fn, 0) or setImmediate(fn)?",
+      "options": [
+        "Always setTimeout",
+        "Always setImmediate — we are already in the poll phase, and check comes next",
+        "Non-deterministic",
+        "Depends on the Node version"
+      ],
+      "correct": [1],
+      "explanation": "Inside an I/O callback the order is deterministic: the loop moves from poll to check, and only reaches timers on the next turn. In the main module, however, the order is non-deterministic — it depends on how long process startup took.",
+      "followUp": ["What is dangerous about a recursive process.nextTick?"],
+      "difficulty": 3
+    },
+    {
+      "id": "node-003",
+      "topic": "node",
+      "type": "single",
+      "question": "Is Node single-threaded?",
+      "options": [
+        "Yes, entirely — everything runs on one thread",
+        "JS runs on one thread, but libuv has a thread pool for files, DNS, crypto and zlib",
+        "No, each request is handled on its own thread",
+        "It depends on whether cluster is enabled"
+      ],
+      "correct": [1],
+      "explanation": "The pool defaults to 4 threads (UV_THREADPOOL_SIZE). Network operations do not go through the pool but through the OS's asynchronous mechanisms (epoll/kqueue). The point worth making in an interview: asynchronous is not the same as parallel, and CPU work on the main thread blocks the handling of every request.",
+      "followUp": ["Where do you move a CPU-heavy task: worker_threads, child_process, cluster?"],
+      "difficulty": 2
+    },
+    {
+      "id": "node-004",
+      "topic": "node",
+      "type": "single",
+      "question": "What is backpressure in streams?",
+      "options": [
+        "Resending data after a network error",
+        "The situation where the source produces data faster than the destination can accept it",
+        "A mechanism for compressing data before writing",
+        "A request queue on the client side"
+      ],
+      "correct": [1],
+      "explanation": "pipe/pipeline handle this automatically: they pause reading until the buffer drains. If you write manually and ignore write() returning false, memory grows and the process dies. pipeline is preferable to pipe because it closes streams properly and propagates errors.",
+      "followUp": ["Why is serving a 2 GB file through fs.readFile a bad idea?"],
+      "difficulty": 2
+    },
+    {
+      "id": "node-005",
+      "topic": "node",
+      "type": "single",
+      "question": "How does ESM differ from CommonJS in Node?",
+      "options": [
+        "ESM only works in the browser",
+        "CJS is synchronous and resolved at runtime; ESM is static, asynchronous, and supports top-level await and tree shaking",
+        "ESM does not support named exports",
+        "CJS is faster because it needs no parsing"
+      ],
+      "correct": [1],
+      "explanation": "Interop is asymmetric: from ESM you can import CJS (as default), but from CJS you cannot import ESM synchronously — only through a dynamic import(). Also, ESM has no __dirname, so you use fileURLToPath(import.meta.url).",
+      "followUp": ["How does the module cache make modules singletons, and what breaks that guarantee?"],
+      "difficulty": 2
+    },
+    {
+      "id": "node-006",
+      "topic": "node",
+      "type": "single",
+      "question": "What should you do on an uncaughtException in production?",
+      "options": [
+        "Log it and keep running — restarting the process is expensive",
+        "Log it and shut the process down in a controlled way, leaving the restart to a supervisor",
+        "Ignore it, Node recovers on its own",
+        "Restart only the current request handler"
+      ],
+      "correct": [1],
+      "explanation": "After an unhandled exception the state of the process is unknown: resources may be left open and data partially modified. The right move is to log, let in-flight requests finish and exit; PM2, systemd or Kubernetes brings it back. The same applies to unhandledRejection.",
+      "followUp": ["Why does a try/catch around a callback not catch an asynchronous error?"],
+      "difficulty": 2
+    },
+    {
+      "id": "node-007",
+      "topic": "node",
+      "type": "single",
+      "question": "What makes error middleware in Express different?",
+      "options": [
+        "It is registered first in the chain",
+        "It takes four arguments: (err, req, res, next)",
+        "It is declared through app.error()",
+        "It automatically catches any asynchronous error"
+      ],
+      "correct": [1],
+      "explanation": "Express distinguishes handlers by arity: four parameters means an error handler, and it has to be registered last. In Express 4, asynchronous errors must be passed to next(err) manually — it will not catch them on its own.",
+      "followUp": ["What does a typical middleware order look like in an application?"],
+      "difficulty": 2
+    },
+    {
+      "id": "node-008",
+      "topic": "node",
+      "type": "multi",
+      "question": "What matters in an API consumed by a mobile app?",
+      "options": [
+        "Versioning — old builds live in the stores for months",
+        "Idempotent write operations — a retry in the metro must not create a second order",
+        "Cursor pagination instead of offset",
+        "Responses as detailed as possible, with every related entity included"
+      ],
+      "correct": [0, 1, 2],
+      "explanation": "A mobile client cannot \"just be deployed\", so backwards compatibility is critical. The response, by contrast, should be compact: the client pays for traffic and for parsing. Separately — clear error codes, split between \"show the user\" and \"log this\".",
+      "followUp": ["Why does offset pagination produce duplicates and gaps in a live feed?"],
+      "difficulty": 2
+    },
+    {
+      "id": "node-009",
+      "topic": "node",
+      "type": "single",
+      "question": "Five parallel requests receive a 401 at the same time. What must not happen?",
+      "options": [
+        "Five parallel attempts to refresh the token",
+        "Queueing the requests until the token is refreshed",
+        "Retrying the requests after a successful refresh",
+        "Logging out when the refresh fails"
+      ],
+      "correct": [0],
+      "explanation": "You need a single in-flight refresh: the first 401 starts it, the rest queue up and retry once it finishes. Otherwise the server gets five refreshes in a row and some tokens get invalidated — and the user is logged out. A classic bug and a frequent question.",
+      "followUp": ["Where do you store the refresh token in a mobile app?"],
+      "difficulty": 3
+    },
+    {
+      "id": "node-010",
+      "topic": "node",
+      "type": "single",
+      "question": "JWT or server-side sessions — what is the main trade-off?",
+      "options": [
+        "JWT is safer in every case",
+        "A JWT is self-contained and needs no trip to storage, but is hard to revoke; a session is easy to revoke but needs shared storage",
+        "Sessions do not work in mobile apps",
+        "JWT cannot be used over HTTPS"
+      ],
+      "correct": [1],
+      "explanation": "Hence the standard scheme: a short-lived access token (minutes) plus a long-lived refresh token that can be revoked. Store the refresh token in the Keychain/Keystore, not in AsyncStorage or localStorage.",
+      "followUp": ["What belongs in a token payload, and what must never go there?"],
+      "difficulty": 2
+    },
+    {
+      "id": "node-011",
+      "topic": "node",
+      "type": "single",
+      "question": "How do you track down high latency in a Node service?",
+      "options": [
+        "Add more instances and see whether it helps",
+        "Check event loop lag, find synchronous calls and build a flame graph",
+        "Rewrite the service on worker_threads",
+        "Increase the thread pool size"
+      ],
+      "correct": [1],
+      "explanation": "The usual culprits: synchronous calls (fs.readFileSync, JSON.parse on large objects, crypto without the async variant), a missing cache, N+1 database queries. Tools: --inspect with DevTools, a heap snapshot for leaks, clinic/0x for flame graphs, and an event loop lag metric in production.",
+      "followUp": ["Why does scaling instances mask the problem rather than solve it?"],
+      "difficulty": 2
+    },
+    {
+      "id": "node-012",
+      "topic": "node",
+      "type": "single",
+      "question": "What is a Buffer?",
+      "options": [
+        "A message queue between threads",
+        "A fixed chunk of binary data outside the V8 heap",
+        "A cache of file operation results",
+        "A string wrapper with encoding support"
+      ],
+      "correct": [1],
+      "explanation": "Needed for files, networking, cryptography and encodings. Create them with Buffer.from/Buffer.alloc; new Buffer is deprecated, and allocUnsafe does not zero the memory — it may still hold somebody else's content.",
+      "followUp": ["How is a Buffer related to streams, and why does it live outside the V8 heap?"],
+      "difficulty": 1
+    },
+    {
+      "id": "node-013",
+      "topic": "node",
+      "type": "single",
+      "question": "How does worker_threads differ from cluster?",
+      "options": [
+        "They are synonyms",
+        "worker_threads are threads inside one process that can share memory; cluster is several processes across cores sharing a port",
+        "cluster is faster for CPU work",
+        "worker_threads only works on Node 20+"
+      ],
+      "correct": [1],
+      "explanation": "Worker threads are cheaper in memory and can use SharedArrayBuffer — suitable for CPU work inside a single service. Cluster scales request handling across cores, with each process isolated. child_process/fork is for launching separate programs.",
+      "followUp": ["Which would you pick for heavy image processing?"],
+      "difficulty": 2
+    },
+    {
+      "id": "node-014",
+      "topic": "node",
+      "type": "single",
+      "question": "What is the right way to test an Express application?",
+      "options": [
+        "Only e2e, through a real HTTP client against a running server",
+        "Unit tests on pure logic plus integration tests through supertest, with external HTTP mocked by nock",
+        "Mock every one of your own modules and assert they were called",
+        "Test only the controllers"
+      ],
+      "correct": [1],
+      "explanation": "The principle is the same as on the front end: mock the boundaries (network, external services, time), not your own logic. A test database in Docker gives realism without the brittleness of ORM mocks. Asserting \"this module was called\" guarantees almost nothing.",
+      "followUp": ["How do you test code that depends on the current time?"],
+      "difficulty": 2
+    },
+    {
+      "id": "node-015",
+      "topic": "node",
+      "type": "open",
+      "question": "Design a checkout endpoint for a mobile app. What will you account for?",
+      "explanation": "The key points they are waiting to hear:\n\n1. **Idempotency** — the client generates an operation key, and a repeat request with the same key returns the existing order rather than creating a second one. This is the first thing to name\n2. **Server-side validation** — prices, availability and promo codes are recomputed on the backend; the client is not the source of truth\n3. **Discrepancies** — if the contents or the total changed, return that explicitly so the client can ask for confirmation rather than silently charging a different amount\n4. **Transactionality** — reserving stock, creating the order and taking payment must be consistent\n5. **Error codes** — split into \"show the user\", \"retry later\" and \"log this\"\n6. **Timeouts and retries** — a client in the metro will repeat the request, and the server has to be ready for it\n7. **Versioning** — old app builds keep sending the old format",
+      "followUp": ["What happens if the response was lost but the order was created?"],
+      "difficulty": 3
+    }
+  ]
+}

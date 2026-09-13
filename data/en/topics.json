@@ -7,10 +7,22 @@
       "order": 1
     },
     {
+      "topic": "typescript",
+      "title": "TypeScript",
+      "group": "Fundamentals",
+      "order": 2
+    },
+    {
       "topic": "react",
       "title": "React: Core",
       "group": "React",
       "order": 3
+    },
+    {
+      "topic": "react-web",
+      "title": "React for the Web and the Browser",
+      "group": "React",
+      "order": 4
     },
     {
       "topic": "rn-architecture",
@@ -29,6 +41,12 @@
       "title": "React Native: Platform and Releases",
       "group": "React Native",
       "order": 7
+    },
+    {
+      "topic": "node",
+      "title": "Node.js",
+      "group": "Backend",
+      "order": 8
     }
   ]
 }
