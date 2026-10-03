@@ -415,6 +415,33 @@ pre code {
   background: none;
 }
 
+/*
+ * Таблицы сравнения в разборах (GET против POST и т. п.). display: block даёт
+ * горизонтальный скролл на узком экране вместо вылезания за край карточки.
+ */
+.explanation table {
+  display: block;
+  overflow-x: auto;
+  border-collapse: collapse;
+  margin: 12px 0;
+  font-size: 0.85em;
+  line-height: 1.35;
+  background: var(--bg);
+  border-radius: var(--radius);
+}
+
+.explanation th,
+.explanation td {
+  padding: 6px 8px;
+  text-align: left;
+  vertical-align: top;
+}
+
+.explanation tr + tr td,
+.explanation tbody tr:first-child td {
+  border-top: 1px solid var(--bg-secondary);
+}
+
 /* Палитра подсветки — на переменных темы, чтобы не тянуть css от Prism. */
 .token.comment {
   color: var(--hint);
