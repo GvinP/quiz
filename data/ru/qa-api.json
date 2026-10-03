@@ -162,6 +162,54 @@
       "explanation": "Симулятор iOS вообще исполняет код под архитектуру хоста, а эмулятор Android не знает про оболочки вендоров — а именно там живут агрессивное убийство фоновых процессов, свои настройки разрешений и правила энергосбережения. Плюс производительность на эмуляторе с ресурсами макбука ничего не говорит о бюджетном телефоне. Разумный баланс: эмуляторы для массового прогона в CI, реальные устройства для производительности, пушей, камеры, биометрии и финальной проверки релиза.",
       "followUp": ["Какие проверки нельзя делегировать эмулятору ни при каких условиях?"],
       "difficulty": 2
+    },
+    {
+      "id": "qa-api-11",
+      "topic": "qa-api",
+      "type": "single",
+      "question": "Какой SQL-запрос вернёт все заказы со статусом 'cancelled'?",
+      "options": [
+        "GET * FROM orders WHERE status = 'cancelled'",
+        "SELECT orders WHERE status = 'cancelled'",
+        "SELECT * FROM orders WHERE status = 'cancelled'",
+        "FIND orders BY status = 'cancelled'"
+      ],
+      "correct": [2],
+      "explanation": "Базовая форма выборки: `SELECT <колонки> FROM <таблица> WHERE <условие>`. `*` означает все колонки, строковые значения пишутся в одинарных кавычках. `GET` — это HTTP-метод, а не SQL, а без `FROM` запрос не разберётся. QA пишет такие запросы, чтобы проверить, что действие в приложении действительно изменило данные в базе.",
+      "followUp": ["Как выбрать заказы с одним из нескольких статусов?"],
+      "difficulty": 1
+    },
+    {
+      "id": "qa-api-12",
+      "topic": "qa-api",
+      "type": "single",
+      "question": "Для чего в SQL используется JOIN?",
+      "options": [
+        "Чтобы объединить строки из нескольких таблиц по связанному полю (например, заказы и пользователей по user_id)",
+        "Чтобы отсортировать результат",
+        "Чтобы удалить дубликаты",
+        "Чтобы добавить новую строку"
+      ],
+      "correct": [0],
+      "explanation": "`JOIN` соединяет таблицы по условию: `SELECT o.id, u.email FROM orders o JOIN users u ON u.id = o.user_id`. `INNER JOIN` оставляет только строки с совпадением в обеих таблицах, `LEFT JOIN` — все строки левой таблицы, даже без пары. Сортировка — `ORDER BY`, удаление дублей — `DISTINCT`, вставка — `INSERT`.",
+      "followUp": ["Как с помощью LEFT JOIN найти пользователей без заказов?"],
+      "difficulty": 2
+    },
+    {
+      "id": "qa-api-13",
+      "topic": "qa-api",
+      "type": "single",
+      "question": "Как посчитать количество заказов у каждого пользователя?",
+      "options": [
+        "SELECT user_id, COUNT(*) FROM orders ORDER BY user_id",
+        "SELECT COUNT(user_id) FROM orders",
+        "SELECT user_id FROM orders WHERE COUNT(*) > 0",
+        "SELECT user_id, COUNT(*) FROM orders GROUP BY user_id"
+      ],
+      "correct": [3],
+      "explanation": "`GROUP BY` разбивает строки на группы по значению колонки, а агрегатная функция (`COUNT`, `SUM`, `AVG`) считается внутри каждой группы. Без `GROUP BY` `COUNT` вернёт одно число на всю таблицу, а `ORDER BY` только сортирует. Агрегаты нельзя использовать в `WHERE` — для фильтрации по ним есть `HAVING`: `... GROUP BY user_id HAVING COUNT(*) > 5`.",
+      "followUp": ["Чем WHERE отличается от HAVING?"],
+      "difficulty": 2
     }
   ]
 }
