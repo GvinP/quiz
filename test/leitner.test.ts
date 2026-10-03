@@ -47,12 +47,23 @@ test('ошибка возвращает вопрос в тот же день: п
   assert.equal(isDue(entry, 200), true);
 });
 
-test('в работу над ошибками попадает только то, что видел минимум дважды', () => {
+test('в работу над ошибками попадает то, где доля верных ниже порога', () => {
   assert.equal(isWeak(undefined), false);
-  assert.equal(isWeak({ box: 1, seen: 1, correct: 0, day: 0 }), false, 'один показ — рано судить');
+  assert.equal(isWeak({ box: 1, seen: 0, correct: 0, day: 0 }), false, 'не показывался — судить не о чем');
+  assert.equal(isWeak({ box: 1, seen: 1, correct: 0, day: 0 }), true, 'одной ошибки достаточно');
+  assert.equal(isWeak({ box: 2, seen: 1, correct: 1, day: 0 }), false);
   assert.equal(isWeak({ box: 1, seen: 2, correct: 1, day: 0 }), true, '0.5 ниже порога 0.6');
   assert.equal(isWeak({ box: 2, seen: 5, correct: 3, day: 0 }), false, '0.6 не ниже порога');
   assert.equal(isWeak({ box: 2, seen: 5, correct: 4, day: 0 }), false);
+});
+
+test('ошибка из прохода по теме сразу видна в работе над ошибками и уходит после двух верных', () => {
+  let entry = record(undefined, false, 0);
+  assert.equal(isWeak(entry), true);
+  entry = record(entry, true, 0);
+  assert.equal(isWeak(entry), true, '1 из 2 — всё ещё ниже порога');
+  entry = record(entry, true, 1);
+  assert.equal(isWeak(entry), false, '2 из 3 — выше порога');
 });
 
 test('дни считаются по календарю, а не по суткам', () => {
