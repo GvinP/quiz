@@ -101,6 +101,60 @@
       "title": "Тестирование: API и CI/CD",
       "group": "Тестирование",
       "order": 17
+    },
+    {
+      "topic": "qa-theory-basics",
+      "title": "Теория QA: основы и виды тестирования",
+      "group": "Тестирование: теория",
+      "order": 18
+    },
+    {
+      "topic": "qa-theory-design",
+      "title": "Теория QA: тест-дизайн",
+      "group": "Тестирование: теория",
+      "order": 19
+    },
+    {
+      "topic": "qa-theory-docs",
+      "title": "Теория QA: документация и баги",
+      "group": "Тестирование: теория",
+      "order": 20
+    },
+    {
+      "topic": "qa-theory-process",
+      "title": "Теория QA: процессы и стратегия",
+      "group": "Тестирование: теория",
+      "order": 21
+    },
+    {
+      "topic": "qa-theory-web",
+      "title": "Теория QA: веб, API и безопасность",
+      "group": "Тестирование: теория",
+      "order": 22
+    },
+    {
+      "topic": "qa-theory-db",
+      "title": "Теория QA: базы данных и SQL",
+      "group": "Тестирование: теория",
+      "order": 23
+    },
+    {
+      "topic": "qa-theory-mobile",
+      "title": "Теория QA: мобильное тестирование",
+      "group": "Тестирование: теория",
+      "order": 24
+    },
+    {
+      "topic": "qa-theory-auto",
+      "title": "Теория QA: автоматизация и CI",
+      "group": "Тестирование: теория",
+      "order": 25
+    },
+    {
+      "topic": "qa-theory-practice",
+      "title": "Теория QA: практические задачи",
+      "group": "Тестирование: теория",
+      "order": 26
     }
   ]
 }
