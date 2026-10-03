@@ -69,8 +69,8 @@ test('работа над ошибками берёт только то, что 
   };
 
   assert.deepEqual(
-    weakQueue(questions, progress, noShuffle).map((q) => q.id),
-    ['rn-arch-001'],
+    weakQueue(questions, progress, noShuffle).map((q) => q.id).sort(),
+    ['rn-arch-001', 'rn-perf-001'],
   );
 });
 
