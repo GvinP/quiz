@@ -1,7 +1,7 @@
 {
   "topic": "rn-platform",
   "title": "React Native: платформа и релизы",
-  "version": 1,
+  "version": 2,
   "questions": [
     {
       "id": "rn-plat-001",
@@ -248,6 +248,7 @@
       "topic": "rn-platform",
       "type": "single",
       "question": "Главная боль монорепы с внутренними пакетами — это…",
+      "openQuestion": "В чём главная боль монорепы с внутренними пакетами?",
       "options": [
         "Размер репозитория",
         "Дубликаты зависимостей, которые ломают синглтоны, `instanceof` и хуки React",

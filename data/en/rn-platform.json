@@ -1,7 +1,7 @@
 {
   "topic": "rn-platform",
   "title": "React Native: Platform and Releases",
-  "version": 1,
+  "version": 2,
   "questions": [
     {
       "id": "rn-plat-001",
@@ -248,6 +248,7 @@
       "topic": "rn-platform",
       "type": "single",
       "question": "The main pain of a monorepo with internal packages is…",
+      "openQuestion": "What is the main pain of a monorepo with internal packages?",
       "options": [
         "Repository size",
         "Duplicate dependencies, which break singletons, instanceof and React hooks",

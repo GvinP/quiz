@@ -1,7 +1,7 @@
 {
   "topic": "rn-performance",
   "title": "React Native: Performance",
-  "version": 1,
+  "version": 2,
   "questions": [
     {
       "id": "rn-perf-001",
@@ -164,6 +164,7 @@
       "topic": "rn-performance",
       "type": "single",
       "question": "FPS dropped. Which conclusion is right if JS FPS specifically is low while UI FPS is fine?",
+      "openQuestion": "FPS dropped: JS FPS is low while UI FPS is fine. Where do you look for the problem?",
       "options": [
         "The problem is a complex view hierarchy and heavy images",
         "The problem is extra renders and expensive computation in JS",

@@ -9,8 +9,9 @@
 /data/ru    # банк вопросов, по файлу на тему + topics.json с порядком и группами
 /data/en    # перевод: те же id, те же correct, сверяется валидатором
 /docs       # quiz-schema.md — контракт данных
-/scripts    # валидация данных
+/scripts    # валидация данных и экспорт банка для бота
 /src        # приложение (Vite + React + TypeScript)
+/bot        # бот-интервьюер на Google Apps Script — см. bot/README.md
 ```
 
 ## Режимы
@@ -30,6 +31,13 @@
 
 Прогресс хранится в `Telegram.WebApp.CloudStorage`, в обычном браузере — в
 `localStorage`. Формат и схема ключей описаны в [docs/quiz-schema.md](docs/quiz-schema.md).
+
+## Бот-интервьюер
+
+Раз в день присылает в Telegram вопрос из этого же банка, принимает ответ
+текстом или голосом, проверяет через Gemini и задаёт уточняющий вопрос. Слабые
+темы спрашивает чаще. `npm run build` дополнительно публикует банк для бота в
+`dist/bot/<язык>.json`. Установка — в [bot/README.md](bot/README.md).
 
 ## Разработка
 

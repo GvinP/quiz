@@ -1,7 +1,7 @@
 {
   "topic": "typescript",
   "title": "TypeScript",
-  "version": 1,
+  "version": 2,
   "questions": [
     {
       "id": "ts-001",
@@ -88,6 +88,7 @@
       "topic": "typescript",
       "type": "single",
       "question": "Which implementation of Omit is correct?",
+      "openQuestion": "How do you implement `Omit` using built-in utility types?",
       "options": [
         "type MyOmit<T, K> = { [P in K]: T[P] }",
         "type MyOmit<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>",
