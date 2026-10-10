@@ -1,7 +1,9 @@
 #!/usr/bin/env node
-// Экспорт банка вопросов для бота-интервьюера (/bot).
-// Запускается после vite build: пишет dist/bot/<язык>.json, и Pages публикует
-// их рядом с приложением — бот забирает файл по https://<user>.github.io/quiz/bot/ru.json.
+// Экспорт для бота-интервьюера (/bot). Запускается после vite build и пишет:
+// - dist/bot/<язык>.json — банк вопросов, бот забирает его по
+//   https://<user>.github.io/quiz/bot/ru.json;
+// - dist/bot/Code.js — все файлы bot/src одним скриптом, чтобы в редактор
+//   Apps Script вставлять один файл, а не девять.
 //
 // Бот задаёт все вопросы как открытые, поэтому варианты в экспорт не попадают:
 // правильные варианты становятся частью эталона, а вопрос берётся из
@@ -10,10 +12,18 @@
 import { mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import vm from 'node:vm';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const DATA_DIR = join(ROOT, 'data');
 const OUT_DIR = join(ROOT, 'dist', 'bot');
+const BOT_SRC = join(ROOT, 'bot', 'src');
+/**
+ * Порядок склейки. Для Apps Script он не важен — файлы делят одну глобальную
+ * область, а на верхнем уровне никто не обращается к чужим константам, — но
+ * так скрипт читается сверху вниз: логика, потом обёртки, потом точки входа.
+ */
+const BOT_FILES = ['Logic', 'Prompts', 'Config', 'Telegram', 'Gemini', 'Store', 'Bank', 'Bot', 'Setup'];
 const REGISTRY = 'topics.json';
 const SOURCE_LANGUAGE = 'ru';
 /** Версия формата экспорта: бот проверяет её и не разбирает чужое. */
@@ -76,4 +86,22 @@ for (const language of languages) {
   summary.push(`${language}: ${bank.questions.length} вопросов, ${Math.round(json.length / 1024)} КБ`);
 }
 
-console.log(`Банк для бота: ${summary.join('; ')} → dist/bot`);
+const present = readdirSync(BOT_SRC).filter((file) => file.endsWith('.js')).map((file) => file.replace(/\.js$/, ''));
+const forgotten = present.filter((name) => !BOT_FILES.includes(name));
+if (forgotten.length > 0) {
+  throw new Error(`bot/src: файлы ${forgotten.join(', ')} не попадут в Code.js — добавь их в BOT_FILES`);
+}
+
+const build = process.env.GITHUB_SHA ? ` · сборка ${process.env.GITHUB_SHA.slice(0, 7)}` : '';
+const code = [
+  `// Бот-интервьюер: все файлы bot/src одним скриптом${build}.`,
+  '// Собрано scripts/export-bot.mjs — правь исходники в репозитории, а не этот файл.',
+  '',
+  ...BOT_FILES.map((name) => `// ===== ${name}.js =====\n\n${readFileSync(join(BOT_SRC, `${name}.js`), 'utf8').trim()}\n`),
+].join('\n');
+// Склейка ловит то, чего не видно по отдельным файлам: две одноимённые
+// константы в разных файлах — это SyntaxError, и Apps Script не сохранит проект.
+new vm.Script(code, { filename: 'Code.js' });
+writeFileSync(join(OUT_DIR, 'Code.js'), code);
+
+console.log(`Банк для бота: ${summary.join('; ')}; скрипт: ${Math.round(code.length / 1024)} КБ → dist/bot`);
