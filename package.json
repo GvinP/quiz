@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "vite build && node scripts/export-bot.mjs",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
     "validate": "node scripts/validate-data.mjs",

@@ -11,6 +11,8 @@ export interface ChoiceQuestion {
   topic: string;
   type: Exclude<QuestionType, 'open'>;
   question: string;
+  /** Формулировка без вариантов для бота-интервьюера; приложение её не показывает. */
+  openQuestion?: string;
   options: string[];
   correct: number[];
   explanation: string;

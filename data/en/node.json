@@ -1,7 +1,7 @@
 {
   "topic": "node",
   "title": "Node.js",
-  "version": 1,
+  "version": 2,
   "questions": [
     {
       "id": "node-001",
@@ -136,6 +136,7 @@
       "topic": "node",
       "type": "single",
       "question": "Five parallel requests receive a 401 at the same time. What must not happen?",
+      "openQuestion": "Five parallel requests get a 401 at the same time. How should the token refresh be handled?",
       "options": [
         "Five parallel attempts to refresh the token",
         "Queueing the requests until the token is refreshed",

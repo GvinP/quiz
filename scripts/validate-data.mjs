@@ -75,6 +75,14 @@ function validateQuestion(file, topic, question, index) {
     }
   }
 
+  if (question.openQuestion !== undefined) {
+    if (question.type === 'open') {
+      fail(where, 'openQuestion нужен только вопросам с вариантами — open и так задаётся без них');
+    } else if (!isNonEmptyString(question.openQuestion)) {
+      fail(where, 'openQuestion должен быть непустой строкой');
+    }
+  }
+
   if (question.type === 'open') {
     if (question.options !== undefined) fail(where, 'у open-вопроса не должно быть options');
     if (question.correct !== undefined) fail(where, 'у open-вопроса не должно быть correct');

@@ -1,7 +1,7 @@
 {
   "topic": "js-core",
   "title": "JavaScript Core",
-  "version": 1,
+  "version": 2,
   "questions": [
     {
       "id": "js-core-001",
@@ -110,6 +110,7 @@
       "topic": "js-core",
       "type": "single",
       "question": "Какое соотношение верно?",
+      "openQuestion": "Как связаны `instance.__proto__`, `Constructor.prototype` и `Constructor.__proto__`?",
       "options": [
         "`instance.prototype === Constructor.__proto__`",
         "`instance.__proto__ === Constructor.prototype`",

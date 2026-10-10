@@ -2,3 +2,5 @@ node_modules/
 dist/
 *.local
 .DS_Store
+# scriptId конкретного проекта Apps Script — у каждого свой
+bot/.clasp.json
