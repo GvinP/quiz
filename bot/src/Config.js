@@ -38,6 +38,11 @@ function today() {
   return dayFromIso(Utilities.formatDate(new Date(), timezone(), 'yyyy-MM-dd'));
 }
 
+/** Который час сейчас в настроенном поясе — для подтверждения /time. */
+function clockNow() {
+  return Utilities.formatDate(new Date(), timezone(), 'HH:mm');
+}
+
 function nowText() {
   return Utilities.formatDate(new Date(), timezone(), 'yyyy-MM-dd HH:mm');
 }

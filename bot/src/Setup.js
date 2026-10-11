@@ -6,6 +6,7 @@ const COMMANDS = [
   { command: 'skip', description: 'Пропустить вопрос' },
   { command: 'lang', description: 'Язык RU/EN' },
   { command: 'stats', description: 'Статистика по темам' },
+  { command: 'time', description: 'Время вопроса дня' },
   { command: 'help', description: 'Справка' },
 ];
 
@@ -32,7 +33,21 @@ function ensureDefaults() {
  * это не трогает — за неё отвечает setChatMenuButton, его бот не вызывает.
  */
 function setupCommands() {
-  console.log(JSON.stringify(tg('setMyCommands', { commands: COMMANDS })));
+  const result = tg('setMyCommands', { commands: COMMANDS });
+  if (result.ok) setCfg('COMMANDS_SYNCED', commandsSignature());
+  console.log(JSON.stringify(result));
+}
+
+function commandsSignature() {
+  return COMMANDS.map((item) => `${item.command}:${item.description}`).join('|');
+}
+
+/**
+ * Код теперь обновляется сам после мёржа, без setup(), поэтому меню команд
+ * догоняет его при первом сообщении: новая команда появится в меню сама.
+ */
+function syncCommands() {
+  if (cfg('COMMANDS_SYNCED') !== commandsSignature()) setupCommands();
 }
 
 /**
