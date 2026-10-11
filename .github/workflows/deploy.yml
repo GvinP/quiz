@@ -47,3 +47,21 @@ jobs:
     steps:
       - id: deployment
         uses: actions/deploy-pages@v4
+
+  # Обновляет бота в Apps Script, если поменялся его код (scripts/deploy-bot.mjs).
+  # После Pages: новый код может рассчитывать на новый банк вопросов.
+  # Без секрета GAS_DEPLOY шаг ничего не делает.
+  bot:
+    needs: deploy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Сборка Code.js
+        run: node scripts/export-bot.mjs
+      - name: Обновление бота
+        env:
+          GAS_DEPLOY: ${{ secrets.GAS_DEPLOY }}
+        run: node scripts/deploy-bot.mjs
