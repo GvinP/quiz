@@ -69,6 +69,9 @@ interface Bot {
   formatStats(history: HistoryRow[], titles: Record<string, string>, lang: string): string;
   commandOf(text: string | undefined): string | null;
   errorSummary(error: unknown, limit?: number): string;
+  isTimezone(value: string): boolean;
+  formatClock(time: [number, number]): string;
+  parseTimeArgs(text: string): { time: [number, number] | null; timezone: string | null; error: string | null };
   reviewRequest(question: BankQuestion, answerText: string): string;
   reviewInstruction(lang: string): string;
   REVIEW_SCHEMA: { required: string[] };
@@ -78,7 +81,7 @@ const bot = vm.runInNewContext(
   `${source}
 ;({ nextBox, updateCard, dayFromIso, isoFromDay, parseTime, topicAverages, pickQuestion, parseModelJson,
     normalizeReview, markdownToHtml, htmlToPlain, formatQuestion, formatReview, formatFollowUpReview,
-    formatStats, commandOf, errorSummary, reviewRequest, reviewInstruction, REVIEW_SCHEMA })`,
+    formatStats, commandOf, errorSummary, isTimezone, formatClock, parseTimeArgs, reviewRequest, reviewInstruction, REVIEW_SCHEMA })`,
 ) as Bot;
 
 const question = (id: string, topic: string, d = 1): BankQuestion => ({ id, topic, d, q: `${id}?`, ref: 'ref', hints: [] });
@@ -246,4 +249,25 @@ test('причина ошибки: первая строка сообщения,
   assert.equal(bot.errorSummary(new Error('Gemini 429: quota\n    at stack')), 'Gemini 429: quota');
   assert.equal(bot.errorSummary('просто строка'), 'просто строка');
   assert.equal(bot.errorSummary(new Error('x'.repeat(50)), 10), `${'x'.repeat(9)}…`);
+});
+
+test('/time: время и пояс в любом порядке, опечатка — ошибка', () => {
+  const both = bot.parseTimeArgs('/time America/Argentina/Buenos_Aires 9:05');
+  assert.deepEqual([...(both.time ?? [])], [9, 5]);
+  assert.equal(both.timezone, 'America/Argentina/Buenos_Aires');
+  assert.equal(both.error, null);
+
+  const empty = bot.parseTimeArgs('/time');
+  assert.deepEqual([empty.time, empty.timezone, empty.error], [null, null, null]);
+
+  assert.equal(bot.parseTimeArgs('/time 11:00 Europe/Moskow').error, 'Europe/Moskow');
+  assert.equal(bot.parseTimeArgs('/time 25:00').error, '25:00');
+  assert.equal(bot.formatClock([9, 5]), '09:05');
+});
+
+test('пояс проверяется по IANA, мусор отбрасывается', () => {
+  assert.equal(bot.isTimezone('Europe/Moscow'), true);
+  assert.equal(bot.isTimezone('UTC'), true);
+  assert.equal(bot.isTimezone('Mars/Olympus'), false);
+  assert.equal(bot.isTimezone('<b>'), false);
 });

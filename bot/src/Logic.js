@@ -223,7 +223,7 @@ function truncate(value, limit) {
 const T = {
   ru: {
     help: (time) =>
-      'Тренировка к собеседованиям.\n\n/question — новый вопрос\n/skip — пропустить\n/lang — RU/EN\n/stats — статистика\n\n' +
+      'Тренировка к собеседованиям.\n\n/question — новый вопрос\n/skip — пропустить\n/lang — RU/EN\n/stats — статистика\n/time — время вопроса дня\n\n' +
       `Отвечай текстом или голосом. Вопрос дня приходит в ${time}.`,
     daily: '☀️ Вопрос дня',
     answerHint: 'Текстом или голосом · /skip',
@@ -245,10 +245,15 @@ const T = {
     statsHead: (count, average) => `📊 Ответов: ${count} · средний ${average}`,
     statsWeak: '🔻 Слабые:',
     statsTopics: 'По темам:',
+    timeShow: (time, zone, now) => `⏰ Вопрос дня: ${time} (${zone}), сейчас там ${now}`,
+    timeSet: (time, zone, now) => `✅ Вопрос дня: ${time} (${zone}), сейчас там ${now}`,
+    timeUsage:
+      'Например:\n/time 11:00\n/time America/Argentina/Buenos_Aires\n/time 11:00 Europe/Moscow\n\n' +
+      'Пояс — название из списка IANA: Europe/Moscow, America/Sao_Paulo…',
   },
   en: {
     help: (time) =>
-      'Interview practice.\n\n/question — new question\n/skip — skip\n/lang — RU/EN\n/stats — stats\n\n' +
+      'Interview practice.\n\n/question — new question\n/skip — skip\n/lang — RU/EN\n/stats — stats\n/time — question of the day time\n\n' +
       `Answer by text or voice. The question of the day comes at ${time}.`,
     daily: '☀️ Question of the day',
     answerHint: 'Text or voice · /skip',
@@ -270,6 +275,11 @@ const T = {
     statsHead: (count, average) => `📊 Answers: ${count} · average ${average}`,
     statsWeak: '🔻 Weak:',
     statsTopics: 'By topic:',
+    timeShow: (time, zone, now) => `⏰ Question of the day: ${time} (${zone}), it is ${now} there now`,
+    timeSet: (time, zone, now) => `✅ Question of the day: ${time} (${zone}), it is ${now} there now`,
+    timeUsage:
+      'For example:\n/time 11:00\n/time America/Argentina/Buenos_Aires\n/time 11:00 Europe/Moscow\n\n' +
+      'The zone is an IANA name: Europe/Moscow, America/Sao_Paulo…',
   },
 };
 
@@ -349,6 +359,38 @@ function formatStats(history, titles, lang) {
 function errorSummary(error, limit) {
   const message = error && error.message ? error.message : String(error);
   return truncate(message.split('\n')[0], limit || 300);
+}
+
+/** Пояс из списка IANA ('Europe/Moscow'); проверяет сам движок, своего списка не держим. */
+function isTimezone(value) {
+  if (!/^[A-Za-z_]+(\/[A-Za-z0-9_+-]+)*$/.test(String(value))) return false;
+  try {
+    new Intl.DateTimeFormat('en-US', { timeZone: value });
+    return true;
+  } catch (error) {
+    return false;
+  }
+}
+
+/** [9, 5] → '09:05': так время хранится в DAILY_TIME. */
+function formatClock(time) {
+  return time.map((part) => String(part).padStart(2, '0')).join(':');
+}
+
+/**
+ * Аргументы /time в любом порядке: время, пояс или оба. Нераспознанный
+ * аргумент — ошибка: молча проигнорировать опечатку в поясе хуже, чем
+ * переспросить.
+ */
+function parseTimeArgs(message) {
+  const result = { time: null, timezone: null, error: null };
+  for (const arg of String(message || '').trim().split(/\s+/).slice(1)) {
+    const time = parseTime(arg);
+    if (time && !result.time) result.time = time;
+    else if (!time && !result.timezone && isTimezone(arg)) result.timezone = arg;
+    else result.error = arg;
+  }
+  return result;
 }
 
 /** Команда из текста: '/Question@my_bot arg' → '/question'. */

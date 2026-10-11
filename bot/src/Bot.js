@@ -73,6 +73,8 @@ function processUpdate(update) {
   if (String(message.chat.id) !== owner) return;
   if (message.date && Date.now() / 1000 - message.date > STALE_SECONDS) return;
 
+  syncCommands();
+
   withLock(() => handleMessage(message), () => send(strings(loadStateSafe().lang).busy));
 }
 
@@ -101,7 +103,7 @@ function loadStateSafe() {
 function handleMessage(message) {
   const state = loadState();
   const command = commandOf(message.text);
-  if (command) return handleCommand(command, state);
+  if (command) return handleCommand(command, state, message.text);
 
   const s = strings(state.lang);
   const voice = message.voice || message.audio;
@@ -125,7 +127,7 @@ function handleMessage(message) {
   return handleFollowUpAnswer(state, answer);
 }
 
-function handleCommand(command, state) {
+function handleCommand(command, state, text) {
   const s = strings(state.lang);
   switch (command) {
     case '/start':
@@ -154,9 +156,25 @@ function handleCommand(command, state) {
       }
       return send(formatStats(loadHistory(), titles, state.lang));
     }
+    case '/time':
+      return handleTime(state, text);
     default:
       return send(s.unknownCommand);
   }
+}
+
+/** /time — показать или поменять время и пояс вопроса дня, не заходя в Apps Script. */
+function handleTime(state, text) {
+  const s = strings(state.lang);
+  const args = parseTimeArgs(text);
+  if (args.error) return send(escapeHtml(s.timeUsage));
+  if (!args.time && !args.timezone) {
+    return send(escapeHtml(s.timeShow(cfg('DAILY_TIME'), timezone(), clockNow())));
+  }
+  if (args.time) setCfg('DAILY_TIME', formatClock(args.time));
+  if (args.timezone) setCfg('TIMEZONE', args.timezone);
+  setupDailyTrigger();
+  return send(escapeHtml(s.timeSet(cfg('DAILY_TIME'), timezone(), clockNow())));
 }
 
 /** Причина — мелким шрифтом: без неё сбой не разобрать, пока не доберёшься до компьютера. */
