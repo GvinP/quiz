@@ -1,8 +1,16 @@
 // Вызов Gemini API (generateContent) со структурированным ответом.
 
 const GEMINI_ENDPOINT = 'https://generativelanguage.googleapis.com/v1beta/models/';
-/** На 429 и 5xx одна повторная попытка: дольше держать webhook нельзя. */
-const GEMINI_RETRY_CODES = [429, 500, 502, 503, 504];
+/** Лимит (429) или перегрузка (5xx): основная модель недоступна, пробуем запасную. */
+const GEMINI_FALLBACK_CODES = [429, 500, 502, 503, 504];
+
+/** Основная модель, потом запасная; без повторов: дольше держать webhook нельзя. */
+function geminiModels() {
+  const models = [cfg('GEMINI_MODEL')];
+  const fallback = cfg('GEMINI_FALLBACK_MODEL');
+  if (fallback && fallback !== 'off' && fallback !== models[0]) models.push(fallback);
+  return models;
+}
 
 function callGemini(instruction, parts, schema) {
   const generationConfig = { responseMimeType: 'application/json', responseJsonSchema: schema };
@@ -22,27 +30,51 @@ function callGemini(instruction, parts, schema) {
     }),
     muteHttpExceptions: true,
   };
-  const url = `${GEMINI_ENDPOINT}${encodeURIComponent(cfg('GEMINI_MODEL'))}:generateContent`;
 
-  let response = UrlFetchApp.fetch(url, request);
-  if (GEMINI_RETRY_CODES.indexOf(response.getResponseCode()) !== -1) {
-    Utilities.sleep(1500);
-    response = UrlFetchApp.fetch(url, request);
+  const failures = [];
+  for (const model of geminiModels()) {
+    let response;
+    try {
+      response = UrlFetchApp.fetch(`${GEMINI_ENDPOINT}${encodeURIComponent(model)}:generateContent`, request);
+    } catch (error) {
+      // Таймаут или обрыв сети: UrlFetchApp бросает даже с muteHttpExceptions.
+      failures.push(`${model}: ${error.message}`);
+      continue;
+    }
+    const code = response.getResponseCode();
+    if (code === 200) return parseGeminiResponse(response.getContentText(), model);
+    failures.push(`${model}: ${code} ${geminiErrorText(response.getContentText())}`);
+    if (GEMINI_FALLBACK_CODES.indexOf(code) === -1) break;
   }
-  if (response.getResponseCode() !== 200) {
-    throw new Error(`Gemini ${response.getResponseCode()}: ${response.getContentText().slice(0, 500)}`);
-  }
+  throw new Error(`Gemini ${failures.join(' | ')}`);
+}
 
-  const data = JSON.parse(response.getContentText());
+/** Из JSON ошибки Google — только error.message: тело целиком в Telegram не влезет. */
+function geminiErrorText(body) {
+  try {
+    const parsed = JSON.parse(body);
+    if (parsed.error && parsed.error.message) return parsed.error.message.slice(0, 200);
+  } catch (error) {
+    // не JSON — отдадим начало как есть
+  }
+  return String(body).slice(0, 200);
+}
+
+function parseGeminiResponse(body, model) {
+  const data = JSON.parse(body);
   const candidate = data.candidates && data.candidates[0];
   if (!candidate) {
-    throw new Error(`Gemini не вернул ответ: ${JSON.stringify(data.promptFeedback || data).slice(0, 300)}`);
+    throw new Error(`Gemini ${model} не вернул ответ: ${JSON.stringify(data.promptFeedback || data).slice(0, 300)}`);
   }
   const output = ((candidate.content && candidate.content.parts) || [])
     .filter((part) => part.text && !part.thought)
     .map((part) => part.text)
     .join('');
-  return normalizeReview(parseModelJson(output));
+  try {
+    return normalizeReview(parseModelJson(output));
+  } catch (error) {
+    throw new Error(`Gemini ${model}: непонятный ответ (${candidate.finishReason || 'нет finishReason'}): ${output.slice(0, 200)}`);
+  }
 }
 
 /** Ответ — текст или голосовое; голосовое уходит в модель как есть, без распознавания. */

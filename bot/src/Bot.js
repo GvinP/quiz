@@ -22,7 +22,7 @@ function doPost(e) {
       processUpdate(JSON.parse(e.postData.contents));
     }
   } catch (error) {
-    console.error(error && error.stack ? error.stack : error);
+    logError('doPost', error);
   }
   return HtmlService.createHtmlOutput('ok');
 }
@@ -116,8 +116,8 @@ function handleMessage(message) {
     try {
       answer.audio = { mimeType: voice.mime_type || 'audio/ogg', data: downloadBase64(voice.file_id) };
     } catch (error) {
-      console.error(error);
-      return send(s.reviewFailed);
+      logError('voice', error);
+      return send(failedText(s, error));
     }
   }
 
@@ -159,6 +159,11 @@ function handleCommand(command, state) {
   }
 }
 
+/** Причина — мелким шрифтом: без неё сбой не разобрать, пока не доберёшься до компьютера. */
+function failedText(s, error, headline) {
+  return `${headline || s.reviewFailed}\n<i>${escapeHtml(errorSummary(error))}</i>`;
+}
+
 function closed(state) {
   return { lang: state.lang, stage: 'idle', question: null, lastQuestionId: state.lastQuestionId || '' };
 }
@@ -184,8 +189,8 @@ function askNext(state, daily) {
   try {
     bank = loadBank(state.lang);
   } catch (error) {
-    console.error(error);
-    return send(s.bankFailed);
+    logError('bank', error);
+    return send(failedText(s, error, s.bankFailed));
   }
 
   const picked = pickQuestion(bank.questions, loadCards(), topicAverages(loadHistory()), today(), {
@@ -204,8 +209,8 @@ function handleAnswer(state, answer) {
   try {
     review = reviewAnswer(question, answer, state.lang);
   } catch (error) {
-    console.error(error);
-    return send(s.reviewFailed);
+    logError('review', error);
+    return send(failedText(s, error));
   }
 
   appendHistory({
@@ -243,8 +248,8 @@ function handleFollowUpAnswer(state, answer) {
   try {
     review = reviewFollowUp(state.question, state, answer, state.lang);
   } catch (error) {
-    console.error(error);
-    return send(s.reviewFailed);
+    logError('followup', error);
+    return send(failedText(s, error));
   }
 
   appendHistory({
@@ -281,7 +286,7 @@ function pollUpdates() {
     try {
       processUpdate(update);
     } catch (error) {
-      console.error(error && error.stack ? error.stack : error);
+      logError('poll', error);
     }
   }
 }
