@@ -68,6 +68,7 @@ interface Bot {
   formatFollowUpReview(review: Review, lang: string): string;
   formatStats(history: HistoryRow[], titles: Record<string, string>, lang: string): string;
   commandOf(text: string | undefined): string | null;
+  errorSummary(error: unknown, limit?: number): string;
   reviewRequest(question: BankQuestion, answerText: string): string;
   reviewInstruction(lang: string): string;
   REVIEW_SCHEMA: { required: string[] };
@@ -77,7 +78,7 @@ const bot = vm.runInNewContext(
   `${source}
 ;({ nextBox, updateCard, dayFromIso, isoFromDay, parseTime, topicAverages, pickQuestion, parseModelJson,
     normalizeReview, markdownToHtml, htmlToPlain, formatQuestion, formatReview, formatFollowUpReview,
-    formatStats, commandOf, reviewRequest, reviewInstruction, REVIEW_SCHEMA })`,
+    formatStats, commandOf, errorSummary, reviewRequest, reviewInstruction, REVIEW_SCHEMA })`,
 ) as Bot;
 
 const question = (id: string, topic: string, d = 1): BankQuestion => ({ id, topic, d, q: `${id}?`, ref: 'ref', hints: [] });
@@ -239,4 +240,10 @@ test('запрос к модели: эталон и подсказки на ме
   assert.match(request, /attached audio/);
   assert.match(bot.reviewInstruction('en'), /English/);
   assert.deepEqual([...bot.REVIEW_SCHEMA.required].sort(), ['followUp', 'gaps', 'language', 'reference', 'score', 'summary']);
+});
+
+test('причина ошибки: первая строка сообщения, длинная обрезается', () => {
+  assert.equal(bot.errorSummary(new Error('Gemini 429: quota\n    at stack')), 'Gemini 429: quota');
+  assert.equal(bot.errorSummary('просто строка'), 'просто строка');
+  assert.equal(bot.errorSummary(new Error('x'.repeat(50)), 10), `${'x'.repeat(9)}…`);
 });

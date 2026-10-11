@@ -345,6 +345,12 @@ function formatStats(history, titles, lang) {
   return lines.join('\n');
 }
 
+/** Короткая причина ошибки для сообщения: первая строка, без стека. */
+function errorSummary(error, limit) {
+  const message = error && error.message ? error.message : String(error);
+  return truncate(message.split('\n')[0], limit || 300);
+}
+
 /** Команда из текста: '/Question@my_bot arg' → '/question'. */
 function commandOf(message) {
   const match = String(message || '').trim().match(/^\/([a-zA-Z_]+)(?:@\w+)?(?:\s|$)/);

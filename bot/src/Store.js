@@ -8,7 +8,9 @@
 const SHEET_STATE = 'State';
 const SHEET_HISTORY = 'History';
 const SHEET_CARDS = 'Cards';
+const SHEET_LOG = 'Log';
 const HISTORY_HEADER = ['time', 'lang', 'questionId', 'topic', 'stage', 'score', 'answer', 'feedback'];
+const LOG_HEADER = ['time', 'where', 'error'];
 const CARDS_HEADER = ['questionId', 'topic', 'box', 'due', 'last', 'seen', 'lastScore', 'dueDate'];
 /** В ячейке не больше 50 000 символов; длинный ответ обрезаем с запасом. */
 const CELL_LIMIT = 45000;
@@ -50,6 +52,21 @@ function ensureSheets() {
   ensureSheet(SHEET_STATE, null);
   ensureSheet(SHEET_HISTORY, HISTORY_HEADER);
   ensureSheet(SHEET_CARDS, CARDS_HEADER);
+  ensureSheet(SHEET_LOG, LOG_HEADER);
+}
+
+/**
+ * Ошибки пишутся и в журнал выполнений, и в лист Log: журнал с телефона не
+ * открыть, а таблицу — можно. Лист создаётся при первой ошибке, если его нет.
+ */
+function logError(where, error) {
+  console.error(error && error.stack ? error.stack : error);
+  try {
+    const message = error && error.message ? error.message : String(error);
+    ensureSheet(SHEET_LOG, LOG_HEADER).appendRow([nowText(), where, message].map(cell));
+  } catch (failure) {
+    console.error(failure);
+  }
 }
 
 // ---------------------------------------------------------------- State

@@ -16,7 +16,7 @@ GitHub Pages ── /quiz/bot/ru.json, en.json ──┐   (scripts/export-bot.m
 Telegram ── webhook ──▶ Apps Script (doPost) ──▶ Gemini API
                               │
                               ▼
-                       Google Таблица: State · History · Cards
+                       Google Таблица: State · History · Cards · Log
 ```
 
 - **Вопросы.** `npm run build` после сборки приложения пишет `dist/bot/<язык>.json`,
@@ -108,6 +108,7 @@ clasp push                           # отправляет bot/src в прое�
 | `TIMEZONE` | `Europe/Moscow` | любой IANA-пояс |
 | `DAILY_TIME` | `11:00` | время вопроса дня, `ЧЧ:ММ` |
 | `GEMINI_MODEL` | `gemini-3.8-flash` | |
+| `GEMINI_FALLBACK_MODEL` | `gemini-3.5-flash-lite` | запасная модель на случай лимита (429) или перегрузки (5xx); `off` — без запасной |
 | `GEMINI_THINKING` | `low` | `low` / `medium` / `high`, для моделей до Gemini 3 — `off` |
 | `QUESTIONS_URL` | `https://gvinp.github.io/quiz/bot/` | |
 | `WEBHOOK_SECRET` | случайная строка | секрет в URL webhook |
@@ -156,6 +157,11 @@ clasp push                           # отправляет bot/src в прое�
   (ответ придёт с задержкой до минуты). Вернуть webhook можно функцией `enableWebhook`.
 - **Сменить время или пояс.** Поменяй `DAILY_TIME` или `TIMEZONE` и запусти
   `setupDailyTrigger`. Apps Script срабатывает с разбросом до ±15 минут.
+- **«Не получилось проверить ответ».** Под этой фразой бот мелким шрифтом пишет,
+  что вернул Gemini. Те же ошибки пишутся в лист `Log` таблицы, его видно и с
+  телефона. `429` — исчерпан лимит бесплатного тарифа: бот уже пробовал запасную
+  модель, остаётся подождать (дневной лимит сбрасывается в полночь по
+  тихоокеанскому времени) или подключить биллинг в AI Studio.
 - **Бот молчит.** Открой **Executions** в редакторе: ошибки каждого вызова
   `doPost` видны там. Частые причины: не обновлён деплой после правки кода или
   опечатка в `CHAT_ID`.

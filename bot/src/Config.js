@@ -6,6 +6,8 @@ const DEFAULTS = {
   TIMEZONE: 'Europe/Moscow',
   DAILY_TIME: '11:00',
   GEMINI_MODEL: 'gemini-3.8-flash',
+  /** Если основная упёрлась в лимит или перегружена; off — без запасной. */
+  GEMINI_FALLBACK_MODEL: 'gemini-3.5-flash-lite',
   /** low | medium | high; off — не передавать вовсе (модели до Gemini 3 его не знают). */
   GEMINI_THINKING: 'low',
   QUESTIONS_URL: 'https://gvinp.github.io/quiz/bot/',
