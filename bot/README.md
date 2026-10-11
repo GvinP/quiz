@@ -148,6 +148,32 @@ clasp push                           # отправляет bot/src в прое�
 3. **В Telegram:** `/question` → ответь → получи разбор и уточнение → ответь на уточнение.
 4. **`testDaily`:** присылает вопрос так же, как утренний триггер.
 
+## Автообновление после мёржа
+
+Workflow `deploy.yml` после публикации Pages запускает `scripts/deploy-bot.mjs`.
+Скрипт заливает свежий `Code.js` в проект, создаёт версию и переключает на неё
+существующее развёртывание. URL webhook при этом не меняется. Если код бота
+не изменился (например, поменялись только вопросы), новая версия не создаётся:
+у проекта Apps Script не больше 200 версий.
+
+Включается секретом репозитория **`GAS_DEPLOY`** (Settings → Secrets and
+variables → Actions → New repository secret). Значение — JSON в одну строку:
+
+```json
+{"client_id":"…","client_secret":"…","refresh_token":"…","script_id":"…","deployment_id":"…"}
+```
+
+- `client_id`, `client_secret`, `refresh_token` — OAuth-доступ с правами
+  `script.projects` и `script.deployments`. Проще всего взять их из
+  `~/.clasprc.json` после `clasp login` (раздел `tokens.default`).
+- `script_id` — ⚙ Настройки проекта → Идентификаторы → Идентификатор скрипта.
+- `deployment_id` — Начать развертывание → Управление развертываниями →
+  идентификатор развёртывания веб-приложения (тот, чей URL стоит в webhook).
+
+Без секрета шаг ничего не делает. Если доступ отозван, job `bot` упадёт с
+понятной ошибкой, а сайт при этом уже опубликован. Отозвать доступ:
+https://myaccount.google.com/permissions → clasp.
+
 ## Если что-то не так
 
 - **В `webhookInfo` висит `Wrong response from the webhook: 302…`.** Иногда
