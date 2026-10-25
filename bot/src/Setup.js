@@ -7,6 +7,7 @@ const COMMANDS = [
   { command: 'lang', description: 'Язык RU/EN' },
   { command: 'stats', description: 'Статистика по темам' },
   { command: 'time', description: 'Время вопроса дня' },
+  { command: 'topics', description: 'Темы вопросов' },
   { command: 'help', description: 'Справка' },
 ];
 

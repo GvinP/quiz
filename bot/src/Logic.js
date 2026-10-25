@@ -137,6 +137,61 @@ function pickQuestion(questions, cards, averages, today, options) {
   return candidates[Math.floor(random() * candidates.length)] || candidates[0];
 }
 
+// ---------------------------------------------------------------- Темы
+
+/** Группы из банка; у старого банка без групп каждая тема — своя группа. */
+function bankGroups(bank) {
+  if (Array.isArray(bank.groups) && bank.groups.length > 0) return bank.groups;
+  const topics = [];
+  for (const question of bank.questions) if (topics.indexOf(question.topic) === -1) topics.push(question.topic);
+  return topics.map((topic) => ({ name: (bank.topics && bank.topics[topic]) || topic, topics: [topic] }));
+}
+
+/** Выключенные темы хранятся списком id: id одинаковы во всех языках, названия групп — нет. */
+function parseTopicList(value) {
+  return String(value || '')
+    .split(',')
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
+function enabledQuestions(questions, off) {
+  return questions.filter((question) => off.indexOf(question.topic) === -1);
+}
+
+/**
+ * /topics 6 7 — переключить группы по номерам; /topics all — включить всё.
+ * Группа считается выключенной, только если выключены все её темы, поэтому
+ * переключение выключенной группы включает её целиком.
+ */
+function toggleGroups(groups, off, message) {
+  const args = String(message || '').trim().split(/\s+/).slice(1);
+  if (args.length === 0) return { off, changed: false, error: null };
+  if (args.length === 1 && /^(all|все|всё)$/i.test(args[0])) return { off: [], changed: true, error: null };
+
+  let next = off.slice();
+  for (const arg of args) {
+    const index = Number(arg) - 1;
+    if (!/^\d+$/.test(arg) || !groups[index]) return { off, changed: false, error: arg };
+    const group = groups[index];
+    if (isGroupOff(group, next)) next = next.filter((topic) => group.topics.indexOf(topic) === -1);
+    else next = next.concat(group.topics.filter((topic) => next.indexOf(topic) === -1));
+  }
+  return { off: next, changed: true, error: null };
+}
+
+function isGroupOff(group, off) {
+  return group.topics.every((topic) => off.indexOf(topic) !== -1);
+}
+
+function formatTopics(groups, off, lang) {
+  const s = strings(lang);
+  const lines = groups.map(
+    (group, index) => `${index + 1}. ${isGroupOff(group, off) ? '❌' : '✅'} ${escapeHtml(group.name)} (${group.topics.length})`,
+  );
+  return [s.topicsHead, '', ...lines, '', s.topicsUsage].join('\n');
+}
+
 // ---------------------------------------------------------------- Ответ Gemini
 
 /** Модель иногда оборачивает JSON в ```json — снимаем обёртку, прежде чем разбирать. */
@@ -223,7 +278,7 @@ function truncate(value, limit) {
 const T = {
   ru: {
     help: (time) =>
-      'Тренировка к собеседованиям.\n\n/question — новый вопрос\n/skip — пропустить\n/lang — RU/EN\n/stats — статистика\n/time — время вопроса дня\n\n' +
+      'Тренировка к собеседованиям.\n\n/question — новый вопрос\n/skip — пропустить\n/lang — RU/EN\n/stats — статистика\n/time — время вопроса дня\n/topics — темы\n\n' +
       `Отвечай текстом или голосом. Вопрос дня приходит в ${time}.`,
     daily: '☀️ Вопрос дня',
     answerHint: 'Текстом или голосом · /skip',
@@ -250,10 +305,13 @@ const T = {
     timeUsage:
       'Например:\n/time 11:00\n/time America/Argentina/Buenos_Aires\n/time 11:00 Europe/Moscow\n\n' +
       'Пояс — название из списка IANA: Europe/Moscow, America/Sao_Paulo…',
+    topicsHead: '📚 Темы вопросов (в скобках — сколько тем в группе):',
+    topicsUsage: '/topics 6 7 — выключить или включить группы по номерам\n/topics all — включить все',
+    topicsAllOff: 'Все темы выключены. /topics — включить',
   },
   en: {
     help: (time) =>
-      'Interview practice.\n\n/question — new question\n/skip — skip\n/lang — RU/EN\n/stats — stats\n/time — question of the day time\n\n' +
+      'Interview practice.\n\n/question — new question\n/skip — skip\n/lang — RU/EN\n/stats — stats\n/time — question of the day time\n/topics — topics\n\n' +
       `Answer by text or voice. The question of the day comes at ${time}.`,
     daily: '☀️ Question of the day',
     answerHint: 'Text or voice · /skip',
@@ -280,6 +338,9 @@ const T = {
     timeUsage:
       'For example:\n/time 11:00\n/time America/Argentina/Buenos_Aires\n/time 11:00 Europe/Moscow\n\n' +
       'The zone is an IANA name: Europe/Moscow, America/Sao_Paulo…',
+    topicsHead: '📚 Question topics (number of topics in brackets):',
+    topicsUsage: '/topics 4 5 — turn groups off or on by number\n/topics all — turn everything on',
+    topicsAllOff: 'All topics are off. /topics — turn them on',
   },
 };
 
