@@ -50,6 +50,33 @@ function reference(question, language) {
   return `${answer}\n\n${question.explanation}`;
 }
 
+function registry(language) {
+  try {
+    return readJson(join(DATA_DIR, language, REGISTRY)).topics;
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Группы тем для /topics в порядке реестра: [{ name, topics }]. Группа берётся
+ * из реестра языка, потом из реестра оригинала; тема без группы становится
+ * группой сама по себе — выключить её всё равно должно быть можно.
+ */
+function topicGroups(language, present, titles) {
+  const own = new Map(registry(language).map((entry) => [entry.topic, entry]));
+  const source = new Map(registry(SOURCE_LANGUAGE).map((entry) => [entry.topic, entry]));
+  const ordered = [...own.values(), ...source.values()].map((entry) => entry.topic).concat(present);
+  const groups = new Map();
+  for (const topic of new Set(ordered)) {
+    if (!present.includes(topic)) continue;
+    const name = own.get(topic)?.group ?? source.get(topic)?.group ?? titles[topic] ?? topic;
+    if (!groups.has(name)) groups.set(name, []);
+    groups.get(name).push(topic);
+  }
+  return [...groups].map(([name, topics]) => ({ name, topics }));
+}
+
 function exportLanguage(language, sourceTitles) {
   const files = topicFiles(language);
   // Названия всех тем, включая непереведённые: /stats на английском всё
@@ -71,7 +98,8 @@ function exportLanguage(language, sourceTitles) {
     }
   }
 
-  return { v: FORMAT, lang: language, topics, questions };
+  const groups = topicGroups(language, files.map((file) => file.topic), topics);
+  return { v: FORMAT, lang: language, topics, groups, questions };
 }
 
 const languages = readdirSync(DATA_DIR).filter((entry) => statSync(join(DATA_DIR, entry)).isDirectory());

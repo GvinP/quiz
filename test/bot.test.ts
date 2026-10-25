@@ -39,6 +39,11 @@ interface Review {
   comment: string;
 }
 
+interface Group {
+  name: string;
+  topics: string[];
+}
+
 interface HistoryRow {
   topic: string;
   stage: string;
@@ -70,6 +75,11 @@ interface Bot {
   commandOf(text: string | undefined): string | null;
   errorSummary(error: unknown, limit?: number): string;
   isTimezone(value: string): boolean;
+  bankGroups(bank: { topics?: Record<string, string>; groups?: Group[]; questions: BankQuestion[] }): Group[];
+  parseTopicList(value: string): string[];
+  enabledQuestions(questions: BankQuestion[], off: string[]): BankQuestion[];
+  toggleGroups(groups: Group[], off: string[], text: string): { off: string[]; changed: boolean; error: string | null };
+  formatTopics(groups: Group[], off: string[], lang: string): string;
   formatClock(time: [number, number]): string;
   parseTimeArgs(text: string): { time: [number, number] | null; timezone: string | null; error: string | null };
   reviewRequest(question: BankQuestion, answerText: string): string;
@@ -81,7 +91,7 @@ const bot = vm.runInNewContext(
   `${source}
 ;({ nextBox, updateCard, dayFromIso, isoFromDay, parseTime, topicAverages, pickQuestion, parseModelJson,
     normalizeReview, markdownToHtml, htmlToPlain, formatQuestion, formatReview, formatFollowUpReview,
-    formatStats, commandOf, errorSummary, isTimezone, formatClock, parseTimeArgs, reviewRequest, reviewInstruction, REVIEW_SCHEMA })`,
+    formatStats, commandOf, errorSummary, isTimezone, bankGroups, parseTopicList, enabledQuestions, toggleGroups, formatTopics, formatClock, parseTimeArgs, reviewRequest, reviewInstruction, REVIEW_SCHEMA })`,
 ) as Bot;
 
 const question = (id: string, topic: string, d = 1): BankQuestion => ({ id, topic, d, q: `${id}?`, ref: 'ref', hints: [] });
@@ -270,4 +280,42 @@ test('пояс проверяется по IANA, мусор отбрасывае
   assert.equal(bot.isTimezone('UTC'), true);
   assert.equal(bot.isTimezone('Mars/Olympus'), false);
   assert.equal(bot.isTimezone('<b>'), false);
+});
+
+const groups: Group[] = [
+  { name: 'React Native', topics: ['rn-architecture', 'rn-performance'] },
+  { name: 'Тестирование', topics: ['qa-basics', 'qa-auto'] },
+  { name: 'Тестирование: теория', topics: ['qa-theory-basics'] },
+];
+
+test('/topics: группы переключаются по номерам, all включает всё', () => {
+  const off = bot.toggleGroups(groups, [], '/topics 2 3');
+  assert.deepEqual([...off.off], ['qa-basics', 'qa-auto', 'qa-theory-basics']);
+  assert.equal(off.changed, true);
+
+  const back = bot.toggleGroups(groups, off.off, '/topics 2');
+  assert.deepEqual([...back.off], ['qa-theory-basics']);
+
+  // Частично выключенная группа при переключении выключается целиком.
+  assert.deepEqual([...bot.toggleGroups(groups, ['qa-basics'], '/topics 2').off], ['qa-basics', 'qa-auto']);
+
+  assert.deepEqual([...bot.toggleGroups(groups, off.off, '/topics all').off], []);
+  assert.equal(bot.toggleGroups(groups, [], '/topics').changed, false);
+  assert.equal(bot.toggleGroups(groups, [], '/topics 9').error, '9');
+  assert.equal(bot.toggleGroups(groups, [], '/topics тест').error, 'тест');
+});
+
+test('/topics: выключенные темы не попадают в выбор, список показывает состояние', () => {
+  const questions = [question('rn-1', 'rn-architecture'), question('qa-1', 'qa-basics')];
+  assert.deepEqual([...bot.enabledQuestions(questions, bot.parseTopicList(' qa-basics, qa-auto ,'))].map((item) => item.id), ['rn-1']);
+
+  const text = bot.formatTopics(groups, ['qa-basics', 'qa-auto'], 'ru');
+  assert.match(text, /1\. ✅ React Native \(2\)/);
+  assert.match(text, /2\. ❌ Тестирование \(2\)/);
+  assert.match(text, /3\. ✅ Тестирование: теория \(1\)/);
+});
+
+test('банк без групп: каждая тема — своя группа', () => {
+  const fallback = bot.bankGroups({ topics: { a: 'Тема A' }, questions: [question('a-1', 'a'), question('b-1', 'b'), question('a-2', 'a')] });
+  assert.deepEqual([...fallback].map((group) => [group.name, [...group.topics]]), [['Тема A', ['a']], ['b', ['b']]]);
 });

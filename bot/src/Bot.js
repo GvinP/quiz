@@ -158,9 +158,35 @@ function handleCommand(command, state, text) {
     }
     case '/time':
       return handleTime(state, text);
+    case '/topics':
+      return handleTopics(state, text);
     default:
       return send(s.unknownCommand);
   }
+}
+
+/**
+ * /topics — какие группы тем спрашивать. Действует и на вопрос дня, и на
+ * /question. Хранится в TOPICS_OFF списком id тем.
+ */
+function handleTopics(state, text) {
+  const s = strings(state.lang);
+  let bank;
+  try {
+    bank = loadBank(state.lang);
+  } catch (error) {
+    logError('bank', error);
+    return send(failedText(s, error, s.bankFailed));
+  }
+  const groups = bankGroups(bank);
+  const result = toggleGroups(groups, disabledTopics(), text);
+  if (result.error) return send(`${escapeHtml(s.topicsUsage)}`);
+  if (result.changed) setCfg('TOPICS_OFF', result.off.join(','));
+  return send(formatTopics(groups, result.off, state.lang));
+}
+
+function disabledTopics() {
+  return parseTopicList(cfg('TOPICS_OFF'));
 }
 
 /** /time — показать или поменять время и пояс вопроса дня, не заходя в Apps Script. */
@@ -192,6 +218,18 @@ function closed(state) {
  */
 function askNext(state, daily) {
   const s = strings(state.lang);
+  let bank;
+  try {
+    bank = loadBank(state.lang);
+  } catch (error) {
+    logError('bank', error);
+    return send(failedText(s, error, s.bankFailed));
+  }
+
+  // Темы выключены все — текущий вопрос не трогаем, просто говорим, где включить.
+  const pool = enabledQuestions(bank.questions, disabledTopics());
+  if (pool.length === 0) return send(s.topicsAllOff);
+
   if (state.stage === 'answer' && state.question) {
     appendHistory({
       lang: state.lang,
@@ -203,15 +241,7 @@ function askNext(state, daily) {
     });
   }
 
-  let bank;
-  try {
-    bank = loadBank(state.lang);
-  } catch (error) {
-    logError('bank', error);
-    return send(failedText(s, error, s.bankFailed));
-  }
-
-  const picked = pickQuestion(bank.questions, loadCards(), topicAverages(loadHistory()), today(), {
+  const picked = pickQuestion(pool, loadCards(), topicAverages(loadHistory()), today(), {
     exclude: state.lastQuestionId || (state.question && state.question.id),
   });
   const question = Object.assign({ title: bank.topics[picked.topic] || picked.topic }, picked);
